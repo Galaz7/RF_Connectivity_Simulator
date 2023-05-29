@@ -71,10 +71,10 @@ def create_nodes_samples(sample_params:NodesDistributionParams):
             x_vec[i]=x
             y_vec[i]=y
             min_dist = get_last_minimal_distance(x_vec[:(i+1)],y_vec[:(i+1)])
-        v = np.random.random(1)*sample_params.velocity_range
+        v = sample_params.velocity_range[0] + np.random.random(1)*(sample_params.velocity_range[1]-sample_params.velocity_range[0])
         ang = np.random.random(1)*2*np.pi
-        vx = v*np.cos(ang)
-        vy = v*np.sin(ang)
+        vx = float(v*np.cos(ang))
+        vy = float(v*np.sin(ang))
         nodes.append(Node(i,x,y,velocity=(vx,vy)))
     return nodes
 
@@ -108,8 +108,14 @@ def create_connectivity_matrix(nodes:list[Node]):
 
 
 def update_nodes_location(nodes:list[Node],time_interval:float = 1.0):
-    """Updates the nodes location after time interval"""
+    """Updates the nodes location after time interval
+
+
+    Args:
+        nodes (list[Node]): The nodes to update the location
+        time_interval (float, optional): The time interval in seconds. Defaults to 1.0.
+    """
     for node in nodes:
-        node.x += time_interval * node.velocity[0]
-        node.y += time_interval * node.velocity[1]
+        node.x += time_interval * node.velocity[0]/1000
+        node.y += time_interval * node.velocity[1]/1000
     
