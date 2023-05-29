@@ -24,6 +24,11 @@ class Node:
     """ frequency in MHz"""
     velocity: Tuple[float,float] = (0,0)
     """ velocity in [m/s]"""
+    next_update: float = 0
+    """next update of model"""
+
+    noise_floor: float = -114 #TODO: Support different reciever types
+    """The noise floor of the reciever in dBm/Reciever channel width"""
 
 
 @dataclass
@@ -36,7 +41,6 @@ class NodesDistributionParams:
     """ nodes minimal distance [km] - required for loss model"""
     nodes_count: int = 100
     """ nodes in area"""
-
     velocity_range:Tuple[float,float] = (0,10.0)
 
     #TODO: Decide how to make several types of sensitive nodes
