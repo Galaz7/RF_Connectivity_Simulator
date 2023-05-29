@@ -1,11 +1,10 @@
 from typing import Tuple
 import numpy as np
 from dataclasses import dataclass
-import numpy as np
 from itertools import product
-import propogation_models as pmodels
+from . import propogation_models as pmodels
 
-import rf_network as rnet
+from . import rf_network as rnet
 
 
 
@@ -19,11 +18,11 @@ class NetworkSimulator:
         l = len(self.nodes)
         self.reported_rssi= -1000*np.ones((l,l))
         self.reported_snr= -1000*np.ones((l,l))
-        self.reported_connectivity= 0*np.ones((l,l))
+        self.reported_connectivity= np.ones((l,l))==0
 
         self.current_rssi= -1000*np.ones((l,l))
         self.current_snr= -1000*np.ones((l,l))
-        self.current_connectivity= 0*np.ones((l,l))
+        self.current_connectivity= np.ones((l,l))==0
 
         self.current_time =0
         self.callbacks=[]

@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 import numpy as np
 from itertools import product
-import propogation_models as pmodels
+from . import propogation_models as pmodels
 
 @dataclass
 class Node:
