@@ -21,11 +21,31 @@ def visualize_nodes_matplot(nodes:list[rn.Node],fig,nodes_color):
     ax.plot(x_list, y_list, linestyle='',marker='o',markersize=3,markeredgecolor='black',markeredgewidth=0.7,markerfacecolor=nodes_color)
 
 
-def visualize_nodes(nodes:list[rn.Node],fig,nodes_color,is_plotly=True):
+def visualize_nodes(nodes:list[rn.Node],fig,nodes_color:str,is_plotly:bool=True):
+    """Visualizes the nodes in a plotly / matplot lib figure. Only nodes positions
+
+    Args:
+        nodes (list[rn.Node]): The list of nodes
+        fig : The plotly/matplotlib figure object
+        nodes_color (str): The face color of all nodes in the graph
+        is_plotly (bool, optional): Set to false if you want to use matplotlib instead of plotly. Defaults to True.
+    """
     func = visualize_nodes_plotly if is_plotly else visualize_nodes_matplot
     func(nodes,fig,nodes_color)
 
-def enumerate_edges_to_display(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_color,reported_cmatrix:np.ndarray):
+def enumerate_edges_to_display(nodes:list[rn.Node],real_cmatrix:np.ndarray,edges_color:str|tuple[str,str,str],reported_cmatrix:np.ndarray):
+    """Go over the list of nodes, for every node that there is a connection between the two nodes, output the 
+       location vector of the two nodes, the edge color classification (real connection, fake connection, missed detection)
+
+    Args:
+        nodes (list[rn.Node]): The list of nodes
+        real_cmatrix (np.ndarray): The connectivity matrix of the real state
+        edges_color (str|tuple[str,str,str]): The color setting for the edges type 
+        reported_cmatrix (np.ndarray): The connectivity matrix of the reported state
+
+    Yields:
+        x_vec,y_vec,edge_color: The x vector,y vector of the edge, and the edge color
+    """
     l = len(nodes)
     if isinstance(edges_color,str):
         edges_color_real_reported = edges_color
@@ -52,7 +72,7 @@ def enumerate_edges_to_display(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,e
 
 def visualize_cmatrix(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_color = ('black','red','orange'),reported_cmatrix:np.ndarray=None,is_plotly=True):
     
-    for x,y,edge_color in enumerate_edges_to_display(nodes,real_cmatrix,fig,edges_color,reported_cmatrix):
+    for x,y,edge_color in enumerate_edges_to_display(nodes,real_cmatrix,edges_color,reported_cmatrix):
         if is_plotly:
             fig.add_trace(go.Scatter(x=x, y=y, mode='lines', line=dict(color=edge_color),showlegend=False))
         else:

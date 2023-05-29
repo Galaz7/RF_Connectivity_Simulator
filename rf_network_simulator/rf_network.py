@@ -21,14 +21,13 @@ class Node:
     antenna_height: float = 3
     """height in [m] from the floor"""
     frequency: float = 100
-    """ frequency in MHz"""
+    """ frequency of transmit/recieve in MHz"""
     velocity: Tuple[float,float] = (0,0)
     """ velocity in [m/s]"""
     next_update: float = 0
-    """next update of model"""
-
+    """next update time of the node. used in the simulation to indicate the next time [sec] the node reports its state (rssi/etc)"""
     noise_floor: float = -114 #TODO: Support different reciever types
-    """The noise floor of the reciever in dBm/Reciever channel width"""
+    """The noise floor of the reciever in dBm/Reciever channel width - for calculation of SNR"""
 
 
 @dataclass
