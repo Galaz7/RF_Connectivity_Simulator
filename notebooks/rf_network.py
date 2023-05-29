@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 import numpy as np
 from itertools import product
-import attenuation_models as am
+import propogation_models as pmodels
 
 @dataclass
 class Node:
@@ -18,8 +18,12 @@ class Node:
     """Sensitivity in dBm"""
     antenna_gain : float = 1
     """anntenna gain in dbi"""
+    antenna_height: float = 3
+    """height in [m] from the floor"""
     frequency: float = 100
     """ frequency in MHz"""
+    velocity: Tuple[float,float] = (0,0)
+    """ velocity in [m/s]"""
 
 
 @dataclass
@@ -32,6 +36,8 @@ class NodesDistributionParams:
     """ nodes minimal distance [km] - required for loss model"""
     nodes_count: int = 100
     """ nodes in area"""
+
+    velocity_range:Tuple[float,float] = (0,10.0)
 
     #TODO: Decide how to make several types of sensitive nodes
 
@@ -65,7 +71,11 @@ def create_nodes_samples(sample_params:NodesDistributionParams):
             x_vec[i]=x
             y_vec[i]=y
             min_dist = get_last_minimal_distance(x_vec[:(i+1)],y_vec[:(i+1)])
-        nodes.append(Node(i,x,y))
+        v = np.random.random(1)*sample_params.velocity_range
+        ang = np.random.random(1)*2*np.pi
+        vx = v*np.cos(ang)
+        vy = v*np.sin(ang)
+        nodes.append(Node(i,x,y,velocity=(vx,vy)))
     return nodes
 
 
@@ -81,7 +91,7 @@ def create_distance_matrix(nodes:list[Node]):
 
 def create_recieve_power_matrix(nodes:list[Node]):
     dists = create_distance_matrix(nodes) + 1000*np.eye(len(nodes))
-    loss_matrix = am.free_space_path_loss(dists,nodes[0].frequency)
+    loss_matrix = pmodels.free_space_path_loss(dists,nodes[0].frequency)
     power_vec = np.array([node.trans_power for node in nodes])
     antenna_gain_vec  = np.array([node.antenna_gain for node in nodes])
 
@@ -95,3 +105,11 @@ def create_connectivity_matrix(nodes:list[Node]):
 
     connectivity_matrix = recieve_power >= sensitivities[None,:]
     return connectivity_matrix
+
+
+def update_nodes_location(nodes:list[Node],time_interval:float = 1.0):
+    """Updates the nodes location after time interval"""
+    for node in nodes:
+        node.x += time_interval * node.velocity[0]
+        node.y += time_interval * node.velocity[1]
+    
