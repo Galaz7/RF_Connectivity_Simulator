@@ -1,6 +1,6 @@
 from typing import Tuple
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass,field
 import numpy as np
 from itertools import product
 from .propogation_models import PropogationModel,PropogationModelFreeSpace
@@ -27,10 +27,10 @@ class Node:
     """ velocity in [m/s]"""
     next_update: float = 0
     """next update time of the node. used in the simulation to indicate the next time [sec] the node reports its state (rssi/etc)"""
-    # noise_floor: float = -114 #TODO: Support different reciever types
-    # """The noise floor of the reciever in dBm/Reciever channel width - for calculation of SNR"""
+    noise_floor: float = -114 #TODO: Think on what to do with this and the SNR measurements
+    """The noise floor of the reciever in dBm/Reciever channel width - for calculation of SNR"""
 
-# 20 vehicle , 25 manned
+# 20 vehicle , 35 manned
 
 # 3.5m (32dBm), 2m (32dBm) 
 
@@ -40,13 +40,12 @@ class NodeTypeDistribution:
     """ number of nodes of this type in area"""
     antenna_height:float
     """ antenna height for this type of nodes"""
-    trans_power:float
+    velocity_range:Tuple[float,float]
+    """minimal,maximal velocity in m/s"""
+    trans_power:float = 32
     """ node transmitter power"""
     antenna_gain:float = 1
     """ node antenna gain"""
-
-    velocity_range:Tuple[float,float]
-    """minimal,maximal velocity in m/s"""
     node_sensitivity: float = -98
     """node sensitivity"""
 
@@ -63,9 +62,9 @@ class NodesDistributionParams:
     nodes_minimal_distance:float =  0.5
     """ nodes minimal distance [km] - required for loss model"""
 
-    node_types:list[NodeTypeDistribution] = [NodeTypeDistribution(60,2.5,(0,12.0/3.6))]
+    # node_types:list[NodeTypeDistribution] = [NodeTypeDistribution(60,2,(0,12.0/3.6))]
+    node_types:list[NodeTypeDistribution] = field(default_factory=lambda: [NodeTypeDistribution(20,3.5,(10,30.0/3.6)),NodeTypeDistribution(35,2,(0,5.0/3.6))])
 
-    #TODO: Decide how to make several types of sensitive nodes
 
 
 def get_random_position(sample_params:NodesDistributionParams):
@@ -84,29 +83,30 @@ def get_last_minimal_distance(x:np.ndarray,y:np.ndarray):
 
 def create_nodes_samples(sample_params:NodesDistributionParams,frequency:float = 200.0) -> list[Node]:
     nodes:list[Node] =[]
-    x_vec = np.zeros(sample_params.nodes_count)
-    y_vec = np.zeros(sample_params.nodes_count)
-    x,y = get_random_position(sample_params)
-    x_vec[0]=x 
-    y_vec[0]=y
-    nodes.append(Node(0,x,y))
+    nodes_count_list = [node_type.count for node_type in sample_params.node_types]
+    nodes_count = sum(nodes_count_list)
+    x_vec = np.zeros(nodes_count)
+    y_vec = np.zeros(nodes_count)
+    x,y =get_random_position(sample_params) 
+    id = 0
     for type_id,node_type in enumerate(sample_params.node_types):
-        for i in range(1,node_type.count):
+        for _ in range(node_type.count):
             min_dist = 0
-            while min_dist<sample_params.nodes_minimal_distance:
+            while min_dist<sample_params.nodes_minimal_distance and len(nodes)>0:
                 x,y =get_random_position(sample_params) 
-                x_vec[i]=x
-                y_vec[i]=y
-                min_dist = get_last_minimal_distance(x_vec[:(i+1)],y_vec[:(i+1)])
+                x_vec[id]=x
+                y_vec[id]=y
+                min_dist = get_last_minimal_distance(x_vec[:(id+1)],y_vec[:(id+1)])
             v = node_type.velocity_range[0] + np.random.random(1)*(node_type.velocity_range[1]-node_type.velocity_range[0])
             ang = np.random.random(1)*2*np.pi
             vx = float(v*np.cos(ang))
             vy = float(v*np.sin(ang))
             nodes.append(
-                Node(i,x,y,velocity=(vx,vy),
+                Node(id,type_id,x,y,velocity=(vx,vy),
                      frequency=frequency,sensitivity=node_type.node_sensitivity,
                      antenna_gain=node_type.antenna_gain,antenna_height=node_type.antenna_height,
-                     trans_power=node_type.trans_power,type_id=type_id))
+                     trans_power=node_type.trans_power))
+            id+=1
     return nodes
 
 
