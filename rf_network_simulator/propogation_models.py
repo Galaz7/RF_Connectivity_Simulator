@@ -39,11 +39,45 @@ def free_space_path_loss(distance_km, frequency_mhz):
     return path_loss_db
 
 
+
+def egli_path_loss(d_km:np.ndarray, h_m1:np.ndarray, h_m2:np.ndarray,f_mhz:float):
+    """
+    Calculate path loss using the Egli model.
+
+    Args:
+        d_km: The distance between the transmitter and receiver in kilometers.
+        h_m1: The height of the first antenna in meters.
+        h_m2: The height of the second antenna in meters.
+        f_mhz: The frequency in MHz.
+
+    Returns:
+        The path loss in dB.
+    """
+    # Convert frequency to GHz for the equation
+    f_ghz = f_mhz / 1000.0
+
+    # Convert distances to miles for the equation
+    d_miles = d_km * 0.621371
+    
+    eps = 0.00001
+    d_miles[d_miles<eps]=eps
+
+    # The Egli model equation
+    L = 117 + 40 * np.log10(d_miles) + 20 * np.log10(f_ghz) - 20 * np.log10(h_m1 * h_m2)
+    L[d_miles<eps]=0
+
+    return L
+
 class PropogationModelFreeSpace(PropogationModel):
     def __call__(self,loc1:np.ndarray,loc2:np.ndarray,frequency:float,antenna_height1:Optional[np.ndarray] = None ,antenna_height2:Optional[np.ndarray] = None):
         d = np.sqrt(np.sum((loc1-loc2)**2,axis=1))
         return free_space_path_loss(d,frequency)
     
+
+class PropogationModelEgli(PropogationModel):
+    def __call__(self,loc1:np.ndarray,loc2:np.ndarray,frequency:float,antenna_height1:Optional[np.ndarray] = None ,antenna_height2:Optional[np.ndarray] = None):
+        d = np.sqrt(np.sum((loc1-loc2)**2,axis=1))
+        return egli_path_loss(d,antenna_height1,antenna_height2,frequency)
 
 
 class PropogationModelLonglyRice(PropogationModel):
@@ -93,7 +127,6 @@ class PropogationModelLonglyRice(PropogationModel):
         freq_mhz = frequency  # frequency in MHz
         tx_height_m = antenna_height1 + terrain_height1  # transmitter height in meters
         rx_height_m = antenna_height2+terrain_height2  # receiver height in meters
-        deltaH = 90  # terrain irregularity parameter [m] #TODO: need to calcualte this
         TSiteCriteria = 1  # Tx Antenna deployment sitting criteria
         RSiteCriteria = 1  # Rx Antenna deployment sitting criteria
         dielectric = 15  # relative permittivity
@@ -112,6 +145,7 @@ class PropogationModelLonglyRice(PropogationModel):
         # Perform the Longley-Rice calculation
         for i in range(reslen):
             if distance_km[i]>1:
+                deltaH = np.abs(tx_height_m[i]-rx_height_m[i])
                 item_res = pyitm.itm.ITMAreadBLoss(
                     ModVar,
                     deltaH,
@@ -131,7 +165,7 @@ class PropogationModelLonglyRice(PropogationModel):
                     pctConf
                 )
             else:
-                item_res=free_space_path_loss(distance_km[i],freq_mhz)
+                item_res=egli_path_loss(distance_km[i],antenna_height1[i],antenna_height2[i],frequency)
             result[i]=item_res
         return result
         

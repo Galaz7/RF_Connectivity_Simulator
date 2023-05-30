@@ -8,13 +8,14 @@ from .propogation_models import PropogationModel,PropogationModelFreeSpace
 @dataclass
 class Node:
     id : int
+    type_id : int
     x : float
     """ x position in the area [km]"""
     y : float
     """ y position in the area [km]"""
     trans_power : float = 30
     """Transmit power in dBm"""
-    sensitivity : float = -50
+    sensitivity : float = -98
     """Sensitivity in dBm"""
     antenna_gain : float = 1
     """anntenna gain in dbi"""
@@ -26,15 +27,34 @@ class Node:
     """ velocity in [m/s]"""
     next_update: float = 0
     """next update time of the node. used in the simulation to indicate the next time [sec] the node reports its state (rssi/etc)"""
-    noise_floor: float = -114 #TODO: Support different reciever types
-    """The noise floor of the reciever in dBm/Reciever channel width - for calculation of SNR"""
+    # noise_floor: float = -114 #TODO: Support different reciever types
+    # """The noise floor of the reciever in dBm/Reciever channel width - for calculation of SNR"""
 
+# 20 vehicle , 25 manned
+
+# 3.5m (32dBm), 2m (32dBm) 
+
+@dataclass
+class NodeTypeDistribution:
+    count: int
+    """ number of nodes of this type in area"""
+    antenna_height:float
+    """ antenna height for this type of nodes"""
+    trans_power:float
+    """ node transmitter power"""
+    antenna_gain:float = 1
+    """ node antenna gain"""
+
+    velocity_range:Tuple[float,float]
+    """minimal,maximal velocity in m/s"""
+    node_sensitivity: float = -98
+    """node sensitivity"""
 
 @dataclass
 class NodesDistributionParams:
-    area_size_x: float = 30
+    area_size_x: float = 5
     """area size in km"""
-    area_size_y: float = 30
+    area_size_y: float = 5
     """area size in km"""
     start_x: float =0
     """position offset in km for nodes placement"""
@@ -42,10 +62,8 @@ class NodesDistributionParams:
     """position offset in km for nodes placement"""
     nodes_minimal_distance:float =  0.5
     """ nodes minimal distance [km] - required for loss model"""
-    nodes_count: int = 100
-    """ number of nodes in area"""
-    velocity_range:Tuple[float,float] = (0,10.0)
-    """minimal,maximal velocity in m/s"""
+
+    node_types:list[NodeTypeDistribution] = [NodeTypeDistribution(60,2.5,(0,12.0/3.6))]
 
     #TODO: Decide how to make several types of sensitive nodes
 
@@ -64,7 +82,7 @@ def get_last_minimal_distance(x:np.ndarray,y:np.ndarray):
     return np.sqrt(dmin)
 
 
-def create_nodes_samples(sample_params:NodesDistributionParams,frequency:float = 200.0):
+def create_nodes_samples(sample_params:NodesDistributionParams,frequency:float = 200.0) -> list[Node]:
     nodes:list[Node] =[]
     x_vec = np.zeros(sample_params.nodes_count)
     y_vec = np.zeros(sample_params.nodes_count)
@@ -72,18 +90,23 @@ def create_nodes_samples(sample_params:NodesDistributionParams,frequency:float =
     x_vec[0]=x 
     y_vec[0]=y
     nodes.append(Node(0,x,y))
-    for i in range(1,sample_params.nodes_count):
-        min_dist = 0
-        while min_dist<sample_params.nodes_minimal_distance:
-            x,y =get_random_position(sample_params) 
-            x_vec[i]=x
-            y_vec[i]=y
-            min_dist = get_last_minimal_distance(x_vec[:(i+1)],y_vec[:(i+1)])
-        v = sample_params.velocity_range[0] + np.random.random(1)*(sample_params.velocity_range[1]-sample_params.velocity_range[0])
-        ang = np.random.random(1)*2*np.pi
-        vx = float(v*np.cos(ang))
-        vy = float(v*np.sin(ang))
-        nodes.append(Node(i,x,y,velocity=(vx,vy),frequency=frequency))
+    for type_id,node_type in enumerate(sample_params.node_types):
+        for i in range(1,node_type.count):
+            min_dist = 0
+            while min_dist<sample_params.nodes_minimal_distance:
+                x,y =get_random_position(sample_params) 
+                x_vec[i]=x
+                y_vec[i]=y
+                min_dist = get_last_minimal_distance(x_vec[:(i+1)],y_vec[:(i+1)])
+            v = node_type.velocity_range[0] + np.random.random(1)*(node_type.velocity_range[1]-node_type.velocity_range[0])
+            ang = np.random.random(1)*2*np.pi
+            vx = float(v*np.cos(ang))
+            vy = float(v*np.sin(ang))
+            nodes.append(
+                Node(i,x,y,velocity=(vx,vy),
+                     frequency=frequency,sensitivity=node_type.node_sensitivity,
+                     antenna_gain=node_type.antenna_gain,antenna_height=node_type.antenna_height,
+                     trans_power=node_type.trans_power,type_id=type_id))
     return nodes
 
 

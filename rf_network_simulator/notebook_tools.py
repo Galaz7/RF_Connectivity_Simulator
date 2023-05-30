@@ -33,6 +33,14 @@ def visualize_nodes(nodes:list[rn.Node],fig,nodes_color:str,is_plotly:bool=True)
     func = visualize_nodes_plotly if is_plotly else visualize_nodes_matplot
     func(nodes,fig,nodes_color)
 
+def decode_edge_type(real_edge:bool,reported_edge:bool) -> int:
+    if real_edge and reported_edge:
+        return 0
+    elif real_edge:
+        return 1
+    else: 
+        return 2
+
 def enumerate_edges_to_display(nodes:list[rn.Node],real_cmatrix:np.ndarray,edges_color:str|tuple[str,str,str],reported_cmatrix:np.ndarray):
     """Go over the list of nodes, for every node that there is a connection between the two nodes, output the 
        location vector of the two nodes, the edge color classification (real connection, fake connection, missed detection)
@@ -48,11 +56,7 @@ def enumerate_edges_to_display(nodes:list[rn.Node],real_cmatrix:np.ndarray,edges
     """
     l = len(nodes)
     if isinstance(edges_color,str):
-        edges_color_real_reported = edges_color
-        edges_color_only_real = edges_color
-        edges_color_only_reported = edges_color
-    else:
-        edges_color_real_reported,edges_color_only_real,edges_color_only_reported = edges_color
+        edges_color = [edges_color,edges_color,edges_color]
 
     if reported_cmatrix is None:
         reported_cmatrix= real_cmatrix
@@ -62,23 +66,28 @@ def enumerate_edges_to_display(nodes:list[rn.Node],real_cmatrix:np.ndarray,edges
             continue
         real_edge = real_cmatrix[idx1,idx2] and real_cmatrix[idx2,idx1]
         reported_edge = reported_cmatrix[idx1,idx2] and reported_cmatrix[idx2,idx1]
-        edge_color = edges_color_real_reported if (real_edge and reported_edge) else (edges_color_only_reported if reported_edge else edges_color_only_real)
+        edge_type = decode_edge_type(real_edge,reported_edge)
+        edge_color = edges_color[edge_type]
         if real_edge or reported_edge:
             x1 = nodes[idx1].x
             y1 = nodes[idx1].y
             x2 = nodes[idx2].x
             y2 = nodes[idx2].y
-            yield [x1,x2],[y1,y2],edge_color
+            yield [x1,x2],[y1,y2],edge_color,edge_type
 
 def visualize_cmatrix(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_color = ('black','red','orange'),reported_cmatrix:np.ndarray=None,is_plotly=True):
-    
-    for x,y,edge_color in enumerate_edges_to_display(nodes,real_cmatrix,edges_color,reported_cmatrix):
+    legend_text=['True report','Missed report',"False report"]
+    legend_done={}
+    for x,y,edge_color,edge_type in enumerate_edges_to_display(nodes,real_cmatrix,edges_color,reported_cmatrix):
         if is_plotly:
             fig.add_trace(go.Scatter(x=x, y=y, mode='lines', line=dict(color=edge_color),showlegend=False))
         else:
             ax = fig.get_axes()[0]
-
-            ax.plot(x, y, linestyle='-',marker='',color=edge_color)
+            label = None
+            if edge_type not in legend_done:
+                label=legend_text[edge_type]
+                legend_done[edge_type] = True
+            ax.plot(x, y, linestyle='-',marker='',color=edge_color,label=label)
 
 
 
@@ -103,6 +112,7 @@ def figure_visualize_nodes(nodes,fig=None,nodes_color='blue',edges_color='black'
             yaxis_title='km',
             width=1000,
             height=1000
-
         )
+    else:
+        fig.legend()
     return fig

@@ -74,6 +74,7 @@ class NetworkSimulator:
                     ax.set_title(f"time ={self.current_time}s")
                     ax.set_ylim(0,self.distribution_params.area_size_y+self.distribution_params.start_y)
                     ax.set_xlim(0,self.distribution_params.area_size_x+self.distribution_params.start_x)
+                    ax.legend()
                     canvas = fig.canvas
                     canvas.draw()
                     image_array = np.array(canvas.renderer.buffer_rgba())
