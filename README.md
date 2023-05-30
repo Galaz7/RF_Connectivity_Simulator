@@ -13,8 +13,20 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 
 ## TODOs:
 
-- [ ] Update motion model - take into account terrain height map
+- [ ] Add two types of nodes - each with different antenna height & velocity
+- [ ] Distributions of 4 clusters. Each cluster have a common velocity vector up to noise
+- [ ] Add randomness for the propogation model - x[dB]
+- [ ] Add measurements of number of islands / number of reported islands - accuracy of segmentation
+- [X] Add Egli model - use it as a model
+- [ ] Add probability for packet loss - single number
+- [x] Add legend to the video
+- [ ] Fix longly rice model for less than 1 km --> egli
+
 - [ ] Update radio propogation model - with terrain map
+- [ ] Update motion model - take into account terrain height map
+
+
 - [ ] Starting distribution should be such that there is a single segment of connection
-- [ ] Add legend to the video
-- [ ] Fix longly rice model for less than 1 km
+- [ ] How to know the right information for transmission
+
+
