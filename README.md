@@ -13,7 +13,10 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 
 ## TODOs:
 
-- [ ] Add two types of nodes - each with different antenna height & velocity
+- [ ] Randomize 5 groups center of mass. In every group randomize according to some radius
+- [ ] Colorize types of nodes
+- [ ] Analyze why the output is so connected with the nominal sensitivity
+- [x] Add two types of nodes - each with different antenna height & velocity
 - [ ] Distributions of 4 clusters. Each cluster have a common velocity vector up to noise
 - [ ] Add randomness for the propogation model - x[dB]
 - [ ] Add measurements of number of islands / number of reported islands - accuracy of segmentation
@@ -21,6 +24,7 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [ ] Add probability for packet loss - single number
 - [x] Add legend to the video
 - [ ] Fix longly rice model for less than 1 km --> egli
+- [ ] Fix the figure display axes ranges (to be centered)
 
 - [ ] Update radio propogation model - with terrain map
 - [ ] Update motion model - take into account terrain height map

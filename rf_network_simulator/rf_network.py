@@ -21,7 +21,7 @@ class Node:
     """anntenna gain in dbi"""
     antenna_height: float = 3
     """height in [m] from the floor"""
-    frequency: float = 100
+    frequency: float = 200
     """ frequency of transmit/recieve in MHz"""
     velocity: Tuple[float,float] = (0,0)
     """ velocity in [m/s]"""

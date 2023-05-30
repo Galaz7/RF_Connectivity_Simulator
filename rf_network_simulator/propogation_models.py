@@ -29,12 +29,16 @@ def free_space_path_loss(distance_km, frequency_mhz):
     #     return np.zeros_like(distance_km)
     
     distance_m = distance_km * 1000
+    eps = 0.01
+    I = distance_m<=eps
+    distance_m[I]=eps
 
     # Convert frequency from megahertz to hertz
     frequency_hz = frequency_mhz * 1e6
 
     # Calculate the free space path loss using the Friis transmission equation
     path_loss_db = 20 * np.log10(distance_m) + 20 * np.log10(frequency_hz) + 20 * np.log10(4 * np.pi / 3e8)
+    path_loss_db[I]=0
 
     return path_loss_db
 
@@ -53,18 +57,13 @@ def egli_path_loss(d_km:np.ndarray, h_m1:np.ndarray, h_m2:np.ndarray,f_mhz:float
     Returns:
         The path loss in dB.
     """
-    # Convert frequency to GHz for the equation
-    f_ghz = f_mhz / 1000.0
-
-    # Convert distances to miles for the equation
-    d_miles = d_km * 0.621371
     
     eps = 0.00001
-    d_miles[d_miles<eps]=eps
+    d_km[d_km<eps]=eps
 
     # The Egli model equation
-    L = 117 + 40 * np.log10(d_miles) + 20 * np.log10(f_ghz) - 20 * np.log10(h_m1 * h_m2)
-    L[d_miles<eps]=0
+    L = 88 + 40 * np.log10(d_km) + 20 * np.log10(f_mhz) - 20 * np.log10(h_m1 * h_m2)
+    L[d_km<eps]=0
 
     return L
 
