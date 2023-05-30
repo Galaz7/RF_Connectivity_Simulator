@@ -25,6 +25,9 @@ class PropogationModel(ABC):
 
 def free_space_path_loss(distance_km, frequency_mhz):
     # Convert distance from kilometers to meters
+    # if distance_km<=0.001:
+    #     return np.zeros_like(distance_km)
+    
     distance_m = distance_km * 1000
 
     # Convert frequency from megahertz to hertz
@@ -47,6 +50,7 @@ class PropogationModelLonglyRice(PropogationModel):
     def __init__(self,height_map:np.ndarray,map_size:tuple[float,float]):
         """Calculates the RF propagation loss using the Longley-Rice Irregular Terrain Model (ITM) as implemeted in the pyitm package. Without using height map
            See https://pyitm.readthedocs.io/en/latest/api.html for more details on the pacakge
+           for less than 1km - use free-space model
 
         Args:
             height_map (np.ndarray): height map in meters over the defined area.
@@ -101,30 +105,33 @@ class PropogationModelLonglyRice(PropogationModel):
         pctLoc = 0.50
         pctConf = 0.50
         ModVar = 1  # Individual mode
-        distance_km = float(np.sqrt(np.sum((loc1-loc2)**2)))  # distance between transmitter and receiver in km
+        distance_km = np.sqrt(np.sum((loc1-loc2)**2,axis=1))  # distance between transmitter and receiver in km
 
         reslen= loc1.shape[0]
         result = np.zeros(reslen)
         # Perform the Longley-Rice calculation
         for i in range(reslen):
-            item_res = pyitm.itm.ITMAreadBLoss(
-                ModVar,
-                deltaH,
-                tx_height_m[i],
-                rx_height_m[i],
-                distance_km[i],
-                TSiteCriteria,
-                RSiteCriteria,
-                dielectric,
-                conductivity,
-                refractivity,
-                freq_mhz,
-                radio_climate,
-                polarization,
-                pctTime,
-                pctLoc,
-                pctConf
-            )
+            if distance_km[i]>1:
+                item_res = pyitm.itm.ITMAreadBLoss(
+                    ModVar,
+                    deltaH,
+                    tx_height_m[i],
+                    rx_height_m[i],
+                    distance_km[i],
+                    TSiteCriteria,
+                    RSiteCriteria,
+                    dielectric,
+                    conductivity,
+                    refractivity,
+                    freq_mhz,
+                    radio_climate,
+                    polarization,
+                    pctTime,
+                    pctLoc,
+                    pctConf
+                )
+            else:
+                item_res=free_space_path_loss(distance_km[i],freq_mhz)
             result[i]=item_res
         return result
         

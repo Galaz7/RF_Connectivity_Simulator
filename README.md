@@ -17,3 +17,4 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [ ] Update radio propogation model - with terrain map
 - [ ] Starting distribution should be such that there is a single segment of connection
 - [ ] Add legend to the video
+- [ ] Fix longly rice model for less than 1 km

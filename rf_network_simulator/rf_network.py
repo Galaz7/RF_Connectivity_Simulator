@@ -36,6 +36,10 @@ class NodesDistributionParams:
     """area size in km"""
     area_size_y: float = 30
     """area size in km"""
+    start_x: float =0
+    """position offset in km for nodes placement"""
+    start_y: float =0
+    """position offset in km for nodes placement"""
     nodes_minimal_distance:float =  0.5
     """ nodes minimal distance [km] - required for loss model"""
     nodes_count: int = 100
@@ -48,8 +52,8 @@ class NodesDistributionParams:
 
 def get_random_position(sample_params:NodesDistributionParams):
     x,y = np.random.random(2)
-    x = sample_params.area_size_x*x
-    y = sample_params.area_size_y*y
+    x = sample_params.area_size_x*x + sample_params.start_x
+    y = sample_params.area_size_y*y + sample_params.start_y
     return x,y
 
 def get_last_minimal_distance(x:np.ndarray,y:np.ndarray):

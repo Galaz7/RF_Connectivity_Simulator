@@ -72,8 +72,8 @@ class NetworkSimulator:
                     nt.visualize_nodes(self.nodes,fig,'blue',is_plotly=False)
                     nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False)
                     ax.set_title(f"time ={self.current_time}s")
-                    ax.set_ylim(0,self.distribution_params.area_size_y)
-                    ax.set_xlim(0,self.distribution_params.area_size_x)
+                    ax.set_ylim(0,self.distribution_params.area_size_y+self.distribution_params.start_y)
+                    ax.set_xlim(0,self.distribution_params.area_size_x+self.distribution_params.start_x)
                     canvas = fig.canvas
                     canvas.draw()
                     image_array = np.array(canvas.renderer.buffer_rgba())
