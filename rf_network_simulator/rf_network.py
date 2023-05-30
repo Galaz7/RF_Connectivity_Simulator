@@ -39,8 +39,9 @@ class NodesDistributionParams:
     nodes_minimal_distance:float =  0.5
     """ nodes minimal distance [km] - required for loss model"""
     nodes_count: int = 100
-    """ nodes in area"""
+    """ number of nodes in area"""
     velocity_range:Tuple[float,float] = (0,10.0)
+    """minimal,maximal velocity in m/s"""
 
     #TODO: Decide how to make several types of sensitive nodes
 
@@ -59,7 +60,7 @@ def get_last_minimal_distance(x:np.ndarray,y:np.ndarray):
     return np.sqrt(dmin)
 
 
-def create_nodes_samples(sample_params:NodesDistributionParams):
+def create_nodes_samples(sample_params:NodesDistributionParams,frequency:float = 200.0):
     nodes:list[Node] =[]
     x_vec = np.zeros(sample_params.nodes_count)
     y_vec = np.zeros(sample_params.nodes_count)
@@ -78,7 +79,7 @@ def create_nodes_samples(sample_params:NodesDistributionParams):
         ang = np.random.random(1)*2*np.pi
         vx = float(v*np.cos(ang))
         vy = float(v*np.sin(ang))
-        nodes.append(Node(i,x,y,velocity=(vx,vy)))
+        nodes.append(Node(i,x,y,velocity=(vx,vy),frequency=frequency))
     return nodes
 
 
