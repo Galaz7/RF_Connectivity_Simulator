@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 from itertools import product
 from . import propogation_models as pmodels
-from .propogation_models import PropogationModel
+from .propogation_models import PropogationModel, PropogationModelFreeSpace
 from . import rf_network as rnet
 from tqdm import tqdm
 from matplotlib import pyplot as plt
@@ -21,7 +21,7 @@ class RenderingOptions:
     fps: float = 8
 
 class NetworkSimulator:
-    def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams() ,frequency:float=200.0 , propogation_model:PropogationModel) :
+    def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams(), frequency:float=200.0  , propogation_model:PropogationModel =PropogationModelFreeSpace()) :
         """Netork main simulator object, simulate the network connections over time and output statistics and video
 
         Args:
@@ -81,11 +81,12 @@ class NetworkSimulator:
                     image_array = image_array[:,:,[2,1,0]]
                     video_writer.write(image_array)
 
-        video_writer.release()
+        if output_video_opts is not None:
+            video_writer.release()
         return SimulationStatistics(accuracy=accuracy)
 
     def update_current_measurements(self):
-        self.current_rssi=rnet.create_recieve_power_matrix(self.nodes)
+        self.current_rssi=rnet.create_recieve_power_matrix(self.nodes,self.propogation_model)
 
         sensitivities = np.array([node.sensitivity for node in self.nodes])
         noise_floor = np.array([node.noise_floor for node in self.nodes])

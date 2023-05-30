@@ -98,7 +98,7 @@ def create_recieve_power_matrix(nodes:list[Node],propogation_model:PropogationMo
     
     idx = np.arange(len(nodes))
     x_idx,y_idx = np.meshgrid(idx,idx)
-    x_idx,y_idx = [x.ravel for x in [x_idx,y_idx]]
+    x_idx,y_idx = [x.ravel() for x in [x_idx,y_idx]]
 
     locs =np.array([[node.x,node.y] for node in nodes])
     heights =np.array([node.antenna_height for node in nodes])
