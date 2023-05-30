@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 from itertools import product
 from . import propogation_models as pmodels
-
+from .propogation_models import PropogationModel
 from . import rf_network as rnet
 from tqdm import tqdm
 from matplotlib import pyplot as plt
@@ -21,7 +21,7 @@ class RenderingOptions:
     fps: float = 8
 
 class NetworkSimulator:
-    def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams() ,frequency:float=200.0) :
+    def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams() ,frequency:float=200.0 , propogation_model:PropogationModel) :
         """Netork main simulator object, simulate the network connections over time and output statistics and video
 
         Args:
@@ -45,6 +45,7 @@ class NetworkSimulator:
 
         self.current_time =0
         self.callbacks=[]
+        self.propogation_model = propogation_model
     
     def full_simulation(self,steps_count = 100,output_video_opts:Optional[RenderingOptions]=None):
         real_plus_reported_edges = 0

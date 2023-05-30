@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 import numpy as np
 from itertools import product
-from . import propogation_models as pmodels
+from .propogation_models import PropogationModel,PropogationModelFreeSpace
 
 @dataclass
 class Node:
@@ -93,10 +93,28 @@ def create_distance_matrix(nodes:list[Node]):
     return matrix
 
 
-def create_recieve_power_matrix(nodes:list[Node]):
-    dists = create_distance_matrix(nodes) + 1000*np.eye(len(nodes))
-    loss_matrix = pmodels.free_space_path_loss(dists,nodes[0].frequency)
+def create_recieve_power_matrix(nodes:list[Node],propogation_model:PropogationModel=PropogationModelFreeSpace()) :
+    #dists = create_distance_matrix(nodes) + 1000*np.eye(len(nodes))
+    
+    idx = np.arange(len(nodes))
+    x_idx,y_idx = np.meshgrid(idx,idx)
+    x_idx,y_idx = [x.ravel for x in [x_idx,y_idx]]
+
+    locs =np.array([[node.x,node.y] for node in nodes])
+    heights =np.array([node.antenna_height for node in nodes])
+
+    loc1 = locs[x_idx,:]
+    loc2 = locs[y_idx,:]
+    h1 = heights[x_idx]
+    h2 = heights[y_idx]
+
+
+
+    loss_matrix = propogation_model(loc1,loc2,nodes[0].frequency,h1,h2)
+    loss_matrix = loss_matrix.reshape((len(nodes),len(nodes)))
+
     power_vec = np.array([node.trans_power for node in nodes])
+
     antenna_gain_vec  = np.array([node.antenna_gain for node in nodes])
 
     recieve_power = power_vec[:,None] - loss_matrix  + antenna_gain_vec[:,None] +  antenna_gain_vec[None,:]
