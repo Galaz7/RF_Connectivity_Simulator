@@ -25,6 +25,7 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [x] Add legend to the video
 - [ ] Fix longly rice model for less than 1 km --> egli
 - [ ] Fix the figure display axes ranges (to be centered)
+- [ ] Seperate between simulation video rendering rate and simulation rate
 
 - [ ] Add node types in the legend
 - [ ] Update radio propogation model - with terrain map

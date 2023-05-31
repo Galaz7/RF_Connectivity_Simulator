@@ -4,6 +4,7 @@ from dataclasses import dataclass,field
 import numpy as np
 from itertools import product
 from .propogation_models import PropogationModel,PropogationModelFreeSpace
+from .spatial_distribution_model import ClusteredDistributer, UniformSpatialDistributer, VelocityDistributer
 
 @dataclass
 class Node:
@@ -55,9 +56,9 @@ class NodesDistributionParams:
     """area size in km"""
     area_size_y: float = 5
     """area size in km"""
-    start_x: float =0
+    margin_x: float =0
     """position offset in km for nodes placement"""
-    start_y: float =0
+    margin_y: float =0
     """position offset in km for nodes placement"""
     nodes_minimal_distance:float =  0.5
     """ nodes minimal distance [km] - required for loss model"""
@@ -66,43 +67,21 @@ class NodesDistributionParams:
     node_types:list[NodeTypeDistribution] = field(default_factory=lambda: [NodeTypeDistribution(20,3.5,(10,30.0/3.6)),NodeTypeDistribution(35,2,(0,5.0/3.6))])
 
 
-
-def get_random_position(sample_params:NodesDistributionParams):
-    x,y = np.random.random(2)
-    x = sample_params.area_size_x*x + sample_params.start_x
-    y = sample_params.area_size_y*y + sample_params.start_y
-    return x,y
-
-def get_last_minimal_distance(x:np.ndarray,y:np.ndarray):
-    dx = x[-1]-x[:-1]
-    dy = y[-1]-y[:-1]
-    d = dx**2 +dy**2
-    dmin  = d.min()
-    return np.sqrt(dmin)
-
-
 def create_nodes_samples(sample_params:NodesDistributionParams,frequency:float = 200.0) -> list[Node]:
     nodes:list[Node] =[]
     nodes_count_list = [node_type.count for node_type in sample_params.node_types]
     nodes_count = sum(nodes_count_list)
-    x_vec = np.zeros(nodes_count)
-    y_vec = np.zeros(nodes_count)
-    x,y =get_random_position(sample_params) 
     id = 0
+    area_size=(sample_params.area_size_x,sample_params.area_size_y)
+    start_offset = (sample_params.margin_x,sample_params.margin_y)
+    spat_dist = ClusteredDistributer(nodes_count=nodes_count,area_size=area_size, start_offset=start_offset,nodes_minimal_distance=sample_params.nodes_minimal_distance)
+    velocity_dist = VelocityDistributer()
     for type_id,node_type in enumerate(sample_params.node_types):
         for _ in range(node_type.count):
-            min_dist = 0
-            while min_dist<sample_params.nodes_minimal_distance and len(nodes)>0:
-                x,y =get_random_position(sample_params) 
-                x_vec[id]=x
-                y_vec[id]=y
-                min_dist = get_last_minimal_distance(x_vec[:(id+1)],y_vec[:(id+1)])
-            v = node_type.velocity_range[0] + np.random.random(1)*(node_type.velocity_range[1]-node_type.velocity_range[0])
-            ang = np.random.random(1)*2*np.pi
-            vx = float(v*np.cos(ang))
-            vy = float(v*np.sin(ang))
+            x,y,cluster_index = spat_dist()
+            v = velocity_dist(cluster_index,node_type.velocity_range)            
             nodes.append(
-                Node(id,type_id,x,y,velocity=(vx,vy),
+                Node(id,type_id,x,y,velocity=(v[0],v[1]),
                      frequency=frequency,sensitivity=node_type.node_sensitivity,
                      antenna_gain=node_type.antenna_gain,antenna_height=node_type.antenna_height,
                      trans_power=node_type.trans_power))
@@ -127,7 +106,7 @@ def create_recieve_power_matrix(nodes:list[Node],propogation_model:PropogationMo
     x_idx,y_idx = np.meshgrid(idx,idx)
     x_idx,y_idx = [x.ravel() for x in [x_idx,y_idx]]
 
-    locs =np.array([[node.x,node.y] for node in nodes])
+    locs =np.array([[node.x,node.y] for node in nodes]).squeeze() #TODO: Need to check why there is an extra dimension here...
     heights =np.array([node.antenna_height for node in nodes])
 
     loc1 = locs[x_idx,:]

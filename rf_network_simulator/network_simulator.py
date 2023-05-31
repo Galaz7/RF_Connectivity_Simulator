@@ -71,9 +71,11 @@ class NetworkSimulator:
                     ax=plt.subplot(111)
                     nt.visualize_nodes(self.nodes,fig,is_plotly=False)
                     nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False)
-                    ax.set_title(f"time ={self.current_time}s")
-                    ax.set_ylim(0,self.distribution_params.area_size_y+self.distribution_params.start_y)
-                    ax.set_xlim(0,self.distribution_params.area_size_x+self.distribution_params.start_x)
+                    time_min = self.current_time//60
+                    time_sec = self.current_time- time_min*60
+                    ax.set_title(f"time ={time_min}:{time_sec} , accuracy = {accuracy:0.3}")
+                    ax.set_ylim(0,self.distribution_params.area_size_y+2*self.distribution_params.margin_y)
+                    ax.set_xlim(0,self.distribution_params.area_size_x+2*self.distribution_params.margin_x)
                     ax.legend()
                     canvas = fig.canvas
                     canvas.draw()
