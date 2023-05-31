@@ -24,7 +24,7 @@ class SizeParams:
     """in km"""
     size_y: float = 5.0
     """in km"""
-    area_margin: float = 0.25
+    area_margin: float = 0.5
     """ Area margins in percentage"""
 
 @params
