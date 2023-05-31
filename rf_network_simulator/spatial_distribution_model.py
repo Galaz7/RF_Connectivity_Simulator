@@ -100,7 +100,7 @@ class ClusteredDistributer(SpatialDistributer):
         return x,y,cluster_index
 
 class VelocityDistributer:
-    def __init__(self,uncertainty = 10):
+    def __init__(self,uncertainty = 5):
         """Distribute a random velocity with same angle for cluster
 
         Args:
@@ -114,7 +114,7 @@ class VelocityDistributer:
         if cluster_index in self.cluster_velocity_directions:
             angle = self.cluster_velocity_directions[cluster_index]
         else:
-            angle = np.random.random(1)*2*np.pi
+            angle = 2*np.pi*(22.5+np.random.random(1)*45)/360
             self.cluster_velocity_directions[cluster_index] = angle
 
         angle_uncertainty = 2*np.pi*(np.random.random(1)*2*self.uncertainty - self.uncertainty)/360
