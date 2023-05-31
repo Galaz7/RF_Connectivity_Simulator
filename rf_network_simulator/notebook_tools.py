@@ -6,22 +6,22 @@ import numpy as np
 import plotly.graph_objects as go
 from . import rf_network as rn
 
-def visualize_nodes_plotly(nodes:list[rn.Node],fig,nodes_color):
+def visualize_nodes_plotly(nodes:list[rn.Node],fig):
     x_list = np.array([node.x for node in nodes])
     y_list = np.array([node.y for node in nodes])
     IDs = [f"index:{i}" for i in range(len(nodes))]
-    scatter_trace = go.Scatter(x=x_list, y=y_list, mode='markers',name='Nodes',marker_color=nodes_color,text=IDs)
+    scatter_trace = go.Scatter(x=x_list, y=y_list, mode='markers',name='Nodes',text=IDs)
     fig.add_trace(scatter_trace)
 
-def visualize_nodes_matplot(nodes:list[rn.Node],fig,nodes_color):
+def visualize_nodes_matplot(nodes:list[rn.Node],fig):
     x_list = np.array([node.x for node in nodes])
     y_list = np.array([node.y for node in nodes])
     ax = fig.get_axes()[0]
 
-    ax.plot(x_list, y_list, linestyle='',marker='o',markersize=3,markeredgecolor='black',markeredgewidth=0.7,markerfacecolor=nodes_color)
+    ax.plot(x_list, y_list, linestyle='',marker='o',markersize=6,markeredgecolor='black',markeredgewidth=0.7)
 
 
-def visualize_nodes(nodes:list[rn.Node],fig,nodes_color:str,is_plotly:bool=True):
+def visualize_nodes(nodes:list[rn.Node],fig,is_plotly:bool=True):
     """Visualizes the nodes in a plotly / matplot lib figure. Only nodes positions
 
     Args:
@@ -31,7 +31,10 @@ def visualize_nodes(nodes:list[rn.Node],fig,nodes_color:str,is_plotly:bool=True)
         is_plotly (bool, optional): Set to false if you want to use matplotlib instead of plotly. Defaults to True.
     """
     func = visualize_nodes_plotly if is_plotly else visualize_nodes_matplot
-    func(nodes,fig,nodes_color)
+    node_types = set([node.type_id for node in nodes])
+    for node_type in node_types:
+        nodes_subset = [node for node in nodes if node.type_id==node_type]
+        func(nodes_subset,fig)
 
 def decode_edge_type(real_edge:bool,reported_edge:bool) -> int:
     if real_edge and reported_edge:
@@ -87,7 +90,7 @@ def visualize_cmatrix(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_colo
             if edge_type not in legend_done:
                 label=legend_text[edge_type]
                 legend_done[edge_type] = True
-            ax.plot(x, y, linestyle='-',marker='',color=edge_color,label=label)
+            ax.plot(x, y, linestyle='-',marker='',color=edge_color,label=label,linewidth=0.5)
 
 
 

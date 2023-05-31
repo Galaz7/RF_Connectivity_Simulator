@@ -14,7 +14,7 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 ## TODOs:
 
 - [ ] Randomize 5 groups center of mass. In every group randomize according to some radius
-- [ ] Colorize types of nodes
+- [x] Colorize types of nodes
 - [ ] Analyze why the output is so connected with the nominal sensitivity
 - [x] Add two types of nodes - each with different antenna height & velocity
 - [ ] Distributions of 4 clusters. Each cluster have a common velocity vector up to noise
@@ -26,6 +26,7 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [ ] Fix longly rice model for less than 1 km --> egli
 - [ ] Fix the figure display axes ranges (to be centered)
 
+- [ ] Add node types in the legend
 - [ ] Update radio propogation model - with terrain map
 - [ ] Update motion model - take into account terrain height map
 

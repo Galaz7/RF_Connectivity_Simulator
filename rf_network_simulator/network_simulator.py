@@ -69,7 +69,7 @@ class NetworkSimulator:
                 if output_video_opts is not None:
                     fig.clear()
                     ax=plt.subplot(111)
-                    nt.visualize_nodes(self.nodes,fig,'blue',is_plotly=False)
+                    nt.visualize_nodes(self.nodes,fig,is_plotly=False)
                     nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False)
                     ax.set_title(f"time ={self.current_time}s")
                     ax.set_ylim(0,self.distribution_params.area_size_y+self.distribution_params.start_y)
