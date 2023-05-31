@@ -20,6 +20,7 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [x] Analyze why the output is so connected with the nominal sensitivity
 - [x] Add two types of nodes - each with different antenna height & velocity
 - [x] Distributions of 4 clusters. Each cluster have a common velocity vector up to noise
+- [ ] Organize experiments - folders, yaml configurations, yaml results, description
 - [ ] Add randomness for the propogation model - x[dB]
 - [ ] Add measurements of number of islands / number of reported islands - accuracy of segmentation
 - [X] Add Egli model - use it as a model

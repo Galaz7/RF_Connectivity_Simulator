@@ -9,11 +9,14 @@ from tqdm import tqdm
 from matplotlib import pyplot as plt
 from rf_network_simulator import notebook_tools as nt
 import cv2
+from eparams import params
 
-@dataclass
+@params
 class SimulationStatistics:
     accuracy:float
     """[number of connections that are both real and reported] / [ number of union of real connections & reported connnections] """
+    precision:float
+    recall:float
 
 @dataclass
 class RenderingOptions:
@@ -23,7 +26,12 @@ class RenderingOptions:
     show_false_reports:bool = True
 
 class NetworkSimulator:
-    def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams(), frequency:float=200.0  , propogation_model:PropogationModel =PropogationModelFreeSpace() , loss_std=7) :
+    def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,
+                 distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams(), 
+                 frequency:float=200.0  , 
+                 propogation_model:PropogationModel =PropogationModelFreeSpace() , 
+                 loss_std=7,
+                 steps_count = 100,output_video_opts:Optional[RenderingOptions]=None) :
         """Netork main simulator object, simulate the network connections over time and output statistics and video
 
         Args:
@@ -40,7 +48,8 @@ class NetworkSimulator:
         self.reported_rssi= -1000*np.ones((l,l))
         self.reported_snr= -1000*np.ones((l,l))
         self.reported_connectivity= np.ones((l,l))==0
-
+        self.steps_count = steps_count
+        self.output_video_opts=output_video_opts
         self.current_rssi= -1000*np.ones((l,l))
         self.current_snr= -1000*np.ones((l,l))
         self.current_connectivity= np.ones((l,l))==0
@@ -50,7 +59,9 @@ class NetworkSimulator:
         self.propogation_model = propogation_model
         self.loss_std = loss_std
     
-    def full_simulation(self,steps_count = 100,output_video_opts:Optional[RenderingOptions]=None):
+    def full_simulation(self):
+        steps_count = self.steps_count
+        output_video_opts = self.output_video_opts
         real_plus_reported_edges = 0
         real_reported_edges = 0
         total_reported_edges = 0
@@ -95,7 +106,7 @@ class NetworkSimulator:
 
         if output_video_opts is not None:
             video_writer.release()
-        return SimulationStatistics(accuracy=accuracy)
+        return SimulationStatistics(accuracy=float(accuracy),precision=float(precision),recall=float(recall))
 
     def update_current_measurements(self):
         self.current_rssi=rnet.create_recieve_power_matrix(self.nodes,self.propogation_model)
