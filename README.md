@@ -29,6 +29,12 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 
 - [x] Show center of mass
 - [x] Add measurements of number of islands / number of reported islands - accuracy of segmentation
+
+
+- [ ] Define an edge as an edge that is stable in the last 2 min (e.g connected>70% time)
+- [ ] The reporting algorithm will report on stable connections
+
+
 - [ ] Colorize differnt clusters
 - [ ] Add probability for packet loss - single number
 - [ ] Fix longly rice model for less than 1 km --> egli
