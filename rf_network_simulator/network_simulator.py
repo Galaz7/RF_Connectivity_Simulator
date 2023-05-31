@@ -53,7 +53,8 @@ class NetworkSimulator:
     def full_simulation(self,steps_count = 100,output_video_opts:Optional[RenderingOptions]=None):
         real_plus_reported_edges = 0
         real_reported_edges = 0
-
+        total_reported_edges = 0
+        total_real_edges = 0
 
         # Iterate over the range with tqdm
         if output_video_opts is not None:
@@ -67,8 +68,13 @@ class NetworkSimulator:
                 self.step()
                 real_plus_reported_edges+= np.sum((self.current_connectivity | self.reported_connectivity))
                 real_reported_edges+= np.sum(self.current_connectivity & self.reported_connectivity)
+                total_reported_edges+= np.sum(self.reported_connectivity)
+                total_real_edges+=np.sum(self.current_connectivity)
                 accuracy = real_reported_edges/real_plus_reported_edges
-                pbar.set_postfix({"accuracy":f"{accuracy:0.3}"})
+                precision = real_reported_edges/total_reported_edges
+                recall = real_reported_edges / total_real_edges
+
+                pbar.set_postfix({"accuracy":f"{accuracy:0.3}","precision":precision,"recall":recall})
                 if output_video_opts is not None:
                     fig.clear()
                     ax=plt.subplot(111)
@@ -76,7 +82,7 @@ class NetworkSimulator:
                     nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False,show_false=output_video_opts.show_false_reports,show_missed=output_video_opts.show_missed_reports)
                     time_min = self.current_time//60
                     time_sec = self.current_time- time_min*60
-                    ax.set_title(f"time ={time_min}:{time_sec} , accuracy = {accuracy:0.3}")
+                    ax.set_title(f"time ={time_min}:{time_sec} , accuracy = {accuracy:0.3} , precision = {precision:0.3} , recall = {recall:0.3}")
                     ax.set_ylim(0,self.distribution_params.area_size_y+2*self.distribution_params.margin_y)
                     ax.set_xlim(0,self.distribution_params.area_size_x+2*self.distribution_params.margin_x)
                     ax.legend()
