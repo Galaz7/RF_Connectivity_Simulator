@@ -7,7 +7,7 @@ from .propogation_models import PropogationModel, PropogationModelFreeSpace
 from . import rf_network as rnet
 from tqdm import tqdm
 from matplotlib import pyplot as plt
-from rf_network_simulator import notebook_tools as nt
+from rf_network_simulator import visualization_tools as nt
 import cv2
 from eparams import params
 

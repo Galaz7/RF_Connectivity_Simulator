@@ -31,6 +31,8 @@ class Node:
     noise_floor: float = -114 #TODO: Think on what to do with this and the SNR measurements
     """The noise floor of the reciever in dBm/Reciever channel width - for calculation of SNR"""
 
+    cluster_index: int = 0
+
 # 20 vehicle , 35 manned
 
 # 3.5m (32dBm), 2m (32dBm) 
@@ -84,7 +86,7 @@ def create_nodes_samples(sample_params:NodesDistributionParams,frequency:float =
                 Node(id,type_id,x,y,velocity=(v[0],v[1]),
                      frequency=frequency,sensitivity=node_type.node_sensitivity,
                      antenna_gain=node_type.antenna_gain,antenna_height=node_type.antenna_height,
-                     trans_power=node_type.trans_power))
+                     trans_power=node_type.trans_power,cluster_index=cluster_index))
             id+=1
     return nodes
 
