@@ -78,8 +78,9 @@ def enumerate_edges_to_display(nodes:list[rn.Node],real_cmatrix:np.ndarray,edges
             y2 = nodes[idx2].y
             yield [x1,x2],[y1,y2],edge_color,edge_type
 
-def visualize_cmatrix(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_color = ('black','red','orange'),reported_cmatrix:np.ndarray=None,is_plotly=True):
+def visualize_cmatrix(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_color = ('black','red','orange'),reported_cmatrix:np.ndarray=None,is_plotly=True,show_false=True,show_missed=True):
     legend_text=['True report','Missed report',"False report"]
+    legend_show=[True,show_missed,show_false]
     legend_done={}
     for x,y,edge_color,edge_type in enumerate_edges_to_display(nodes,real_cmatrix,edges_color,reported_cmatrix):
         if is_plotly:
@@ -90,7 +91,8 @@ def visualize_cmatrix(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_colo
             if edge_type not in legend_done:
                 label=legend_text[edge_type]
                 legend_done[edge_type] = True
-            ax.plot(x, y, linestyle='-',marker='',color=edge_color,label=label,linewidth=0.5)
+            if legend_show[edge_type]:
+                ax.plot(x, y, linestyle='-',marker='',color=edge_color,label=label,linewidth=0.5)
 
 
 

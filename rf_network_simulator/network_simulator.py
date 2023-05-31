@@ -19,6 +19,8 @@ class SimulationStatistics:
 class RenderingOptions:
     file_name:str
     fps: float = 8
+    show_missed_reports: bool = True
+    show_false_reports:bool = True
 
 class NetworkSimulator:
     def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams(), frequency:float=200.0  , propogation_model:PropogationModel =PropogationModelFreeSpace() , loss_std=7) :
@@ -71,7 +73,7 @@ class NetworkSimulator:
                     fig.clear()
                     ax=plt.subplot(111)
                     nt.visualize_nodes(self.nodes,fig,is_plotly=False)
-                    nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False)
+                    nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False,show_false=output_video_opts.show_false_reports,show_missed=output_video_opts.show_missed_reports)
                     time_min = self.current_time//60
                     time_sec = self.current_time- time_min*60
                     ax.set_title(f"time ={time_min}:{time_sec} , accuracy = {accuracy:0.3}")
@@ -93,7 +95,7 @@ class NetworkSimulator:
         self.current_rssi=rnet.create_recieve_power_matrix(self.nodes,self.propogation_model)
         
         if self.loss_std>0:
-            loss_random=np.random.normal(loc=0,scalse=self.loss_std,size=self.current_rssi.shape)
+            loss_random=np.random.normal(loc=0,scale=self.loss_std,size=self.current_rssi.shape)
         else:
             loss_random=0
         self.current_rssi += loss_random
