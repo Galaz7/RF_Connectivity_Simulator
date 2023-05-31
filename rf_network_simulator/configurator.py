@@ -96,8 +96,8 @@ def create_simulator_from_yaml(params_file_name="params.yaml") ->tuple[NetworkSi
         node_types=[NodeTypeDistribution(params.number_of_total_nodes,2.5,(0,params.person_maximal_velocity/3.6))]
     else:
         number_of_vehicles = max(1,int(params.number_of_total_nodes * params.percentage_of_vehicles))
-        node_types=[NodeTypeDistribution(params.number_of_total_nodes-number_of_vehicles,2.5,(0,params.person_maximal_velocity/3.6))]
-        node_types=[NodeTypeDistribution(number_of_vehicles,3.5,(params.vehicle_velocity_range[0]/3.6,params.vehicle_velocity_range[1]/3.6))]
+        node_types=[NodeTypeDistribution(params.number_of_total_nodes-number_of_vehicles,2.5,(0,params.person_maximal_velocity/3.6)),
+                    NodeTypeDistribution(number_of_vehicles,3.5,(params.vehicle_velocity_range[0]/3.6,params.vehicle_velocity_range[1]/3.6))]
 
     margin_x = params.area_size.size_x*params.area_size.area_margin
     margin_y = params.area_size.size_y*params.area_size.area_margin
@@ -114,7 +114,6 @@ def create_simulator_from_yaml(params_file_name="params.yaml") ->tuple[NetworkSi
     propogation_model = propogation_models[params.propogation_model]
 
     total_time = params.simulation_steps_count #iterations
-    params.simulation_rate_secs # nodes update every 15 minutes
     update_rate = params.update_rate_mins*60
 
 
@@ -127,6 +126,6 @@ def create_simulator_from_yaml(params_file_name="params.yaml") ->tuple[NetworkSi
     else:
         output_video_opts=None
 
-    sim = NetworkSimulator(simulation_rate=10,update_rate=update_rate,frequency=200,propogation_model=propogation_model,distribution_params=dist,steps_count=total_time,output_video_opts=output_video_opts)
+    sim = NetworkSimulator(simulation_rate=params.simulation_rate_secs,update_rate=update_rate,frequency=200,propogation_model=propogation_model,distribution_params=dist,steps_count=total_time,output_video_opts=output_video_opts)
     return sim,experiment_folder
 

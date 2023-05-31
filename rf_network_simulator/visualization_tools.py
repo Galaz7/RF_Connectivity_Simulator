@@ -36,6 +36,36 @@ def visualize_nodes(nodes:list[rn.Node],fig,is_plotly:bool=True):
         nodes_subset = [node for node in nodes if node.type_id==node_type]
         func(nodes_subset,fig)
 
+
+def visualize_clusters_plotly(centers:np.ndarray,fig):
+    scatter_trace = go.Scatter(x=centers[:,0], y=centers[:,1], mode='markers',marker="x",name='clusters')
+    fig.add_trace(scatter_trace)
+
+def visualize_clusters_matplot(centers:np.ndarray,fig):
+    ax = fig.get_axes()[0]
+
+    ax.plot(centers[:,0], centers[:,1], linestyle='',marker='x',markersize=6,markeredgecolor='red',markeredgewidth=2)
+
+def visualize_clusters(nodes:list[rn.Node],fig,is_plotly:bool=True):
+    """Visualizes the clusters in a plotly / matplot lib figure. Only nodes positions
+
+    Args:
+        nodes (list[rn.Node]): The list of nodes
+        fig : The plotly/matplotlib figure object
+        nodes_color (str): The face color of all nodes in the graph
+        is_plotly (bool, optional): Set to false if you want to use matplotlib instead of plotly. Defaults to True.
+    """
+    func = visualize_clusters_plotly if is_plotly else visualize_clusters_matplot
+    cluster_types = set([node.cluster_index for node in nodes])
+    cluster_centers = []
+    for cluster_index in cluster_types:
+        nodes_centers = np.array([[node.x,node.y] for node in nodes if node.cluster_index==cluster_index])
+        cluster_center = np.mean(nodes_centers,axis = 0)
+        cluster_centers.append(cluster_center)
+    cluster_centers = np.array(cluster_centers)
+    func(cluster_centers,fig)
+
+
 def decode_edge_type(real_edge:bool,reported_edge:bool) -> int:
     if real_edge and reported_edge:
         return 0

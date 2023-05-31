@@ -20,21 +20,24 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [x] Analyze why the output is so connected with the nominal sensitivity
 - [x] Add two types of nodes - each with different antenna height & velocity
 - [x] Distributions of 4 clusters. Each cluster have a common velocity vector up to noise
-- [ ] Organize experiments - folders, yaml configurations, yaml results, description
-- [ ] Add randomness for the propogation model - x[dB]
-- [ ] Add measurements of number of islands / number of reported islands - accuracy of segmentation
+- [x] Organize experiments - folders, yaml configurations, yaml results, description
+- [x] Add randomness for the propogation model - x[dB]
 - [X] Add Egli model - use it as a model
-- [ ] Add probability for packet loss - single number
 - [x] Add legend to the video
-- [ ] Fix longly rice model for less than 1 km --> egli
 - [x] Fix the figure display axes ranges (to be centered)
+- [x] Starting distribution should be such that there is a single segment of connection
+
+- [ ] Show center of mass
+- [ ] Add measurements of number of islands / number of reported islands - accuracy of segmentation
+- [ ] Colorize differnt clusters
+- [ ] Add probability for packet loss - single number
+- [ ] Fix longly rice model for less than 1 km --> egli
 - [ ] Seperate between simulation video rendering rate and simulation rate
 
 - [ ] Update radio propogation model - with terrain map
 - [ ] Update motion model - take into account terrain height map
 
 
-- [ ] Starting distribution should be such that there is a single segment of connection
 - [ ] How to know the right information for transmission
 - [ ] Add node types in the legend
 

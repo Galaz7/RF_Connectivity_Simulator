@@ -90,6 +90,7 @@ class NetworkSimulator:
                     fig.clear()
                     ax=plt.subplot(111)
                     nt.visualize_nodes(self.nodes,fig,is_plotly=False)
+                    nt.visualize_clusters(self.nodes,fig,is_plotly=False)
                     nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False,show_false=output_video_opts.show_false_reports,show_missed=output_video_opts.show_missed_reports)
                     time_min = self.current_time//60
                     time_sec = self.current_time- time_min*60
