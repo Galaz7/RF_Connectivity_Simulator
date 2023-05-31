@@ -27,8 +27,8 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [x] Fix the figure display axes ranges (to be centered)
 - [x] Starting distribution should be such that there is a single segment of connection
 
-- [ ] Show center of mass
-- [ ] Add measurements of number of islands / number of reported islands - accuracy of segmentation
+- [x] Show center of mass
+- [x] Add measurements of number of islands / number of reported islands - accuracy of segmentation
 - [ ] Colorize differnt clusters
 - [ ] Add probability for packet loss - single number
 - [ ] Fix longly rice model for less than 1 km --> egli
