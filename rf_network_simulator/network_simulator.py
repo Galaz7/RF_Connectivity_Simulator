@@ -21,7 +21,7 @@ class RenderingOptions:
     fps: float = 8
 
 class NetworkSimulator:
-    def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams(), frequency:float=200.0  , propogation_model:PropogationModel =PropogationModelFreeSpace()) :
+    def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,distribution_params:rnet.NodesDistributionParams  = rnet.NodesDistributionParams(), frequency:float=200.0  , propogation_model:PropogationModel =PropogationModelFreeSpace() , loss_std=7) :
         """Netork main simulator object, simulate the network connections over time and output statistics and video
 
         Args:
@@ -46,6 +46,7 @@ class NetworkSimulator:
         self.current_time =0
         self.callbacks=[]
         self.propogation_model = propogation_model
+        self.loss_std = loss_std
     
     def full_simulation(self,steps_count = 100,output_video_opts:Optional[RenderingOptions]=None):
         real_plus_reported_edges = 0
@@ -90,6 +91,12 @@ class NetworkSimulator:
 
     def update_current_measurements(self):
         self.current_rssi=rnet.create_recieve_power_matrix(self.nodes,self.propogation_model)
+        
+        if self.loss_std>0:
+            loss_random=np.random.normal(loc=0,scalse=self.loss_std,size=self.current_rssi.shape)
+        else:
+            loss_random=0
+        self.current_rssi += loss_random
 
         sensitivities = np.array([node.sensitivity for node in self.nodes])
         noise_floor = np.array([node.noise_floor for node in self.nodes])
