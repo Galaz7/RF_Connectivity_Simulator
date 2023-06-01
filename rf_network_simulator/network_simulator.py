@@ -101,7 +101,19 @@ class NetworkSimulator:
         self.callbacks=[]
         self.propogation_model = propogation_model
         self.loss_std = loss_std
+        self.set_nodes_turn_on_period()
     
+    def set_nodes_turn_on_period(self):
+        min_turn_on = 0
+        max_turn_on = 3*60
+        if self.stability.use_stability_conditions:
+            min_turn_on+=self.stability.stability_period_sec
+            max_turn_on+=self.stability.stability_period_sec
+        for node in self.nodes:
+            node.next_update = min_turn_on+np.random.random(1)*(max_turn_on-min_turn_on)
+        
+        self.max_turn_on = max_turn_on
+        
 
     def full_simulation(self):
         steps_count = self.steps_count
@@ -138,6 +150,9 @@ class NetworkSimulator:
         return stats
 
     def calculate_statistics(self,len_of_components_real,len_of_components_reported):
+        if self.current_time<self.max_turn_on:
+            # We multiply by to to give the nodes the opportunity to be turned on statistics
+            return SimulationStatistics(accuracy=1.0,precision=1.0,recall=1.0,islands_accuracy=1.0)
         self.real_plus_reported_edges+= np.sum((self.current_connectivity | self.reported_connectivity))
         self.real_reported_edges+= np.sum(self.current_connectivity & self.reported_connectivity)
         self.total_reported_edges+= np.sum(self.reported_connectivity)
