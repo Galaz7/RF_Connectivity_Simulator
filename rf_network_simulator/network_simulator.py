@@ -56,7 +56,7 @@ class StabilityTracker:
         if len(self.cmatrices)>self.steps_window:
             self.cmatrices.remove(self.cmatrices[0])
     def get_stable_connectivity(self):
-        cmatrix = np.concatenate(self.cmatrices) #TODO: maybe we can skip the concatenate
+        cmatrix = np.concatenate(self.cmatrices,axis=-1) #TODO: maybe we can skip the concatenate
         cmatrix_count = np.sum(cmatrix,axis=-1)
         return cmatrix_count>=self.stability_thresh
 
@@ -143,7 +143,7 @@ class NetworkSimulator:
         self.total_reported_edges+= np.sum(self.reported_connectivity)
         self.total_real_edges+=np.sum(self.current_connectivity)
         accuracy = self.real_reported_edges/self.real_plus_reported_edges
-        precision = self.real_reported_edges/self.total_reported_edges
+        precision = self.real_reported_edges/max(1,self.total_reported_edges)
         recall = self.real_reported_edges / self.total_real_edges
 
         self.islands_accuracy_nom += min(len_of_components_real,len_of_components_reported)
@@ -166,13 +166,14 @@ class NetworkSimulator:
         ax=plt.subplot(111)
         nt.visualize_nodes(self.nodes,fig,is_plotly=False)
         nt.visualize_clusters(self.nodes,fig,is_plotly=False)
-        nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False,show_false=output_video_opts.show_false_reports,show_missed=output_video_opts.show_missed_reports)
+        edges_exist=nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False,show_false=output_video_opts.show_false_reports,show_missed=output_video_opts.show_missed_reports)
         time_min = self.current_time//60
         time_sec = self.current_time- time_min*60
         ax.set_title(f"time ={time_min}:{time_sec} , accuracy = {stats.accuracy:0.3} , precision = {stats.precision:0.3} , recall = {stats.recall:0.3} \n islands_accuracy={stats.islands_accuracy:0.3} , number of islands = {num_of_islands}")
         ax.set_ylim(0,self.distribution_params.area_size_y+2*self.distribution_params.margin_y)
         ax.set_xlim(0,self.distribution_params.area_size_x+2*self.distribution_params.margin_x)
-        ax.legend()
+        if edges_exist:
+            ax.legend()
         canvas = fig.canvas
         canvas.draw()
         image_array = np.array(canvas.renderer.buffer_rgba())

@@ -112,6 +112,7 @@ def visualize_cmatrix(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_colo
     legend_text=['True report','Missed report',"False report"]
     legend_show=[True,show_missed,show_false]
     legend_done={}
+    edges_exist=False
     for x,y,edge_color,edge_type in enumerate_edges_to_display(nodes,real_cmatrix,edges_color,reported_cmatrix):
         if is_plotly:
             fig.add_trace(go.Scatter(x=x, y=y, mode='lines', line=dict(color=edge_color),showlegend=False))
@@ -122,8 +123,9 @@ def visualize_cmatrix(nodes:list[rn.Node],real_cmatrix:np.ndarray,fig,edges_colo
                 label=legend_text[edge_type]
                 legend_done[edge_type] = True
             if legend_show[edge_type]:
+                edges_exist=True
                 ax.plot(x, y, linestyle='-',marker='',color=edge_color,label=label,linewidth=0.5)
-
+    return edges_exist
 
 
 
@@ -138,7 +140,7 @@ def figure_visualize_nodes(nodes,fig=None,nodes_color='blue',edges_color='black'
     cmatrix = rn.create_connectivity_matrix(nodes)
 
     visualize_nodes(nodes,fig,nodes_color,is_plotly)
-    visualize_cmatrix(nodes,cmatrix,fig,edges_color,is_plotly=is_plotly)
+    edges_exist=visualize_cmatrix(nodes,cmatrix,fig,edges_color,is_plotly=is_plotly)
     # Update the layout
     if is_plotly:
         fig.update_layout(
@@ -149,5 +151,6 @@ def figure_visualize_nodes(nodes,fig=None,nodes_color='blue',edges_color='black'
             height=1000
         )
     else:
-        fig.legend()
+        if edges_exist:
+            fig.legend()
     return fig
