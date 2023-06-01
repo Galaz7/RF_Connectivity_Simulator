@@ -70,40 +70,18 @@ class Config:
 
 def create_simulator_from_yaml(params_file_name="params.yaml") ->tuple[NetworkSimulator,str]:
 
-    params = Config()
-
-    if os.path.exists(params_file_name):
-        params._from_yaml(params_file_name)
+    params = create_config_from_yaml(params_file_name)
 
 
-    git_repo = git.Repo(".", search_parent_directories=True)
-    project_root = git_repo.git.rev_parse("--show-toplevel")
-
-    experiments_folder=osp.join(project_root,"experiments")
-
-    if not osp.exists(experiments_folder):
-        os.makedirs(experiments_folder)
-        with open(osp.join(experiments_folder,".gitignore"),'wt') as f:
-                f.write("*")
-
-
-    # Get the current date and time
-    current_datetime = datetime.datetime.now()
-
-    # Format the date and time
-    formatted_datetime = current_datetime.strftime("%Y%m%d_%H%M")
-
-    experiment_name = params.experiment_name.replace(" ","_")
-
-    sha = git_repo.head.commit.hexsha[0:8]
-
-    experiment_folder = formatted_datetime + "_" + sha + "__" + experiment_name
-
-    experiment_folder = osp.join(experiments_folder,experiment_folder)
-    os.makedirs(experiment_folder)
+    experiment_folder = create_experiments_folder(params)
 
     params._to_yaml(osp.join(experiment_folder,"params.yaml"))
 
+    sim = create_simulator_from_params(params, experiment_folder)
+    
+    return sim,experiment_folder
+
+def create_simulator_from_params(params, experiment_folder):
     if params.percentage_of_vehicles==0:
         node_types=[NodeTypeDistribution(params.number_of_total_nodes,2.5,(0,params.person_maximal_velocity/3.6))]
     else:
@@ -141,5 +119,40 @@ def create_simulator_from_yaml(params_file_name="params.yaml") ->tuple[NetworkSi
     stability_opts = StablityOptions(params.stability.use_stability_conditions,params.stability.stability_period_sec,params.stability.stability_rate,params.stability.reported_is_stable)
 
     sim = NetworkSimulator(simulation_rate=params.simulation_rate_secs,update_rate=update_rate,frequency=200,propogation_model=propogation_model,distribution_params=dist,steps_count=total_time,output_video_opts=output_video_opts,stability=stability_opts)
-    return sim,experiment_folder
+    return sim
+
+def create_experiments_folder(params):
+    git_repo = git.Repo(".", search_parent_directories=True)
+    project_root = git_repo.git.rev_parse("--show-toplevel")
+
+    experiments_folder=osp.join(project_root,"experiments")
+
+    if not osp.exists(experiments_folder):
+        os.makedirs(experiments_folder)
+        with open(osp.join(experiments_folder,".gitignore"),'wt') as f:
+                f.write("*")
+
+
+    # Get the current date and time
+    current_datetime = datetime.datetime.now()
+
+    # Format the date and time
+    formatted_datetime = current_datetime.strftime("%Y%m%d_%H%M")
+
+    experiment_name = params.experiment_name.replace(" ","_")
+
+    sha = git_repo.head.commit.hexsha[0:8]
+
+    experiment_folder = formatted_datetime + "_" + sha + "__" + experiment_name
+
+    experiment_folder = osp.join(experiments_folder,experiment_folder)
+    os.makedirs(experiment_folder)
+    return experiment_folder
+
+def create_config_from_yaml(params_file_name):
+    params = Config()
+
+    if os.path.exists(params_file_name):
+        params._from_yaml(params_file_name)
+    return params
 
