@@ -6,19 +6,30 @@ import numpy as np
 import plotly.graph_objects as go
 from . import rf_network as rn
 
-def visualize_nodes_plotly(nodes:list[rn.Node],fig):
+def visualize_nodes_plotly(nodes:list[rn.Node],fig,node_type,node_group):
     x_list = np.array([node.x for node in nodes])
     y_list = np.array([node.y for node in nodes])
     IDs = [f"index:{i}" for i in range(len(nodes))]
     scatter_trace = go.Scatter(x=x_list, y=y_list, mode='markers',name='Nodes',text=IDs)
     fig.add_trace(scatter_trace)
 
-def visualize_nodes_matplot(nodes:list[rn.Node],fig):
+def get_group_colors():
+    group_colors = ['b', 'g', 'r', 'm', 'c', 'y']
+    return group_colors
+
+
+def visualize_nodes_matplot(nodes:list[rn.Node],fig,node_type,node_group):
     x_list = np.array([node.x for node in nodes])
     y_list = np.array([node.y for node in nodes])
     ax = fig.get_axes()[0]
+    type_markers = ['o','^']
+    group_colors  = get_group_colors()
+    marker = type_markers[node_type % len(type_markers)]
+    color = group_colors[node_group % len(group_colors)]
 
-    ax.plot(x_list, y_list, linestyle='',marker='o',markersize=6,markeredgecolor='black',markeredgewidth=0.7)
+
+
+    ax.plot(x_list, y_list, linestyle='',color=color,marker=marker,markersize=6,markeredgecolor='black',markeredgewidth=0.7)
 
 
 def visualize_nodes(nodes:list[rn.Node],fig,is_plotly:bool=True):
@@ -32,9 +43,12 @@ def visualize_nodes(nodes:list[rn.Node],fig,is_plotly:bool=True):
     """
     func = visualize_nodes_plotly if is_plotly else visualize_nodes_matplot
     node_types = set([node.type_id for node in nodes])
-    for node_type in node_types:
-        nodes_subset = [node for node in nodes if node.type_id==node_type]
-        func(nodes_subset,fig)
+    node_groups = set([node.cluster_index for node in nodes])
+    for node_type,node_group in product(node_types,node_groups):
+        
+        nodes_subset = [node for node in nodes if node.type_id==node_type and node.cluster_index==node_group]
+        if len(nodes_subset)>0:
+            func(nodes_subset,fig,node_type,node_group)
 
 
 def visualize_clusters_plotly(centers:np.ndarray,fig):
@@ -43,8 +57,11 @@ def visualize_clusters_plotly(centers:np.ndarray,fig):
 
 def visualize_clusters_matplot(centers:np.ndarray,fig):
     ax = fig.get_axes()[0]
+    group_colors  = get_group_colors()
 
-    ax.plot(centers[:,0], centers[:,1], linestyle='',marker='x',markersize=6,markeredgecolor='red',markeredgewidth=2)
+    for node_group in range(centers.shape[0]):
+        color = group_colors[node_group % len(group_colors)]
+        ax.plot(centers[node_group,0], centers[node_group,1], linestyle='',marker='x',markersize=6,markeredgecolor=color,markeredgewidth=2)
 
 def visualize_clusters(nodes:list[rn.Node],fig,is_plotly:bool=True):
     """Visualizes the clusters in a plotly / matplot lib figure. Only nodes positions
@@ -57,6 +74,7 @@ def visualize_clusters(nodes:list[rn.Node],fig,is_plotly:bool=True):
     """
     func = visualize_clusters_plotly if is_plotly else visualize_clusters_matplot
     cluster_types = set([node.cluster_index for node in nodes])
+    cluster_types = sorted(cluster_types)
     cluster_centers = []
     for cluster_index in cluster_types:
         nodes_centers = np.array([[node.x,node.y] for node in nodes if node.cluster_index==cluster_index])

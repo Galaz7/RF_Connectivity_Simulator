@@ -185,8 +185,18 @@ class NetworkSimulator:
         time_min = self.current_time//60
         time_sec = self.current_time- time_min*60
         ax.set_title(f"time ={time_min}:{time_sec} , accuracy = {stats.accuracy:0.3} , precision = {stats.precision:0.3} , recall = {stats.recall:0.3} \n islands_accuracy={stats.islands_accuracy:0.3} , number of islands = {num_of_islands}")
-        ax.set_ylim(0,self.distribution_params.area_size_y+2*self.distribution_params.margin_y)
-        ax.set_xlim(0,self.distribution_params.area_size_x+2*self.distribution_params.margin_x)
+        
+        #TODO: consider making this dependant on the motion model. 
+        #      For motion model with common direction, we don't need to start on 0,0 but for uniform motion model,
+        #      we may need a margin on the left side of the output
+        motion_model_common_direction = True
+        if motion_model_common_direction:
+            lim_low_x,lim_low_y=self.distribution_params.margin_x,self.distribution_params.margin_y
+        else:
+            lim_low_x,lim_low_y=0,0
+
+        ax.set_ylim(lim_low_y,self.distribution_params.area_size_y+2*self.distribution_params.margin_y)
+        ax.set_xlim(lim_low_x,self.distribution_params.area_size_x+2*self.distribution_params.margin_x)
         if edges_exist:
             ax.legend()
         canvas = fig.canvas
