@@ -28,6 +28,15 @@ class RenderingOptions:
     show_false_reports:bool = True
 
 
+@dataclass
+class StablityOptions:
+    use_stability_conditions:bool = False
+    """Use stability for declaring existance of edge"""
+    stability_period_sec:int = 120
+    """ The priod of time to measure an edge stability"""
+    stability_rate:float = 0.7
+    """ The rate of connectivity in the period of time to declare an edge to be stable"""
+
 def connected_components(edges):
     G = nx.from_numpy_matrix(edges)
     components = list(nx.connected_components(G))
@@ -39,7 +48,8 @@ class NetworkSimulator:
                  frequency:float=200.0  , 
                  propogation_model:PropogationModel =PropogationModelFreeSpace() , 
                  loss_std=7,
-                 steps_count = 100,output_video_opts:Optional[RenderingOptions]=None) :
+                 steps_count = 100,output_video_opts:Optional[RenderingOptions]=None,
+                 stability:StablityOptions = StablityOptions()) :
         """Netork main simulator object, simulate the network connections over time and output statistics and video
 
         Args:
@@ -47,6 +57,7 @@ class NetworkSimulator:
             simulation_rate (float, optional): The time interval in secs between every step of the simulation. Defaults to 1.
             distribution_params (rnet.NodesDistributionParams, optional): Controls how the nodes are distributed in the defined area. Defaults to rnet.NodesDistributionParams().
             frequency (float, optional): The frequecy in MHz of the transmissions. Defaults to 200.0.
+            stability_condition_sec (float): The condition to declare an endge to be stable
         """
         self.update_rate = update_rate
         self.simulation_rate = simulation_rate
@@ -61,22 +72,24 @@ class NetworkSimulator:
         self.current_rssi= -1000*np.ones((l,l))
         self.current_snr= -1000*np.ones((l,l))
         self.current_connectivity= np.ones((l,l))==0
+        self.stability = stability
 
         self.current_time =0
         self.callbacks=[]
         self.propogation_model = propogation_model
         self.loss_std = loss_std
     
+
     def full_simulation(self):
         steps_count = self.steps_count
         output_video_opts = self.output_video_opts
-        real_plus_reported_edges = 0
-        real_reported_edges = 0
-        total_reported_edges = 0
-        total_real_edges = 0
+        self.real_plus_reported_edges = 0
+        self.real_reported_edges = 0
+        self.total_reported_edges = 0
+        self.total_real_edges = 0
 
-        islands_accuracy_nom = 0
-        islands_accuracy_denom=0
+        self.islands_accuracy_nom = 0
+        self.islands_accuracy_denom=0
 
         # Iterate over the range with tqdm
         if output_video_opts is not None:
@@ -88,47 +101,61 @@ class NetworkSimulator:
         with tqdm(range(steps_count), desc="Processing") as pbar:
             for _ in pbar:
                 self.step()
-                real_plus_reported_edges+= np.sum((self.current_connectivity | self.reported_connectivity))
-                real_reported_edges+= np.sum(self.current_connectivity & self.reported_connectivity)
-                total_reported_edges+= np.sum(self.reported_connectivity)
-                total_real_edges+=np.sum(self.current_connectivity)
-                accuracy = real_reported_edges/real_plus_reported_edges
-                precision = real_reported_edges/total_reported_edges
-                recall = real_reported_edges / total_real_edges
 
-                current_connectivity = self.current_connectivity & self.current_connectivity.T
-                components_real = connected_components(current_connectivity)
+                components_real, components_reported = self.calculate_network_component()
 
-                reported_connectivity = self.reported_connectivity & self.reported_connectivity.T
-                components_reported = connected_components(reported_connectivity)
+                stats = self.calculate_statistics(len(components_real),len(components_reported))
 
-                islands_accuracy_nom += min(len(components_real),len(components_reported))
-                islands_accuracy_denom += max(len(components_real),len(components_reported))
-                islands_accuracy = islands_accuracy_nom/islands_accuracy_denom
-
-                pbar.set_postfix({"accuracy":f"{accuracy:0.3}","precision":precision,"recall":recall,"islands_accuracy":islands_accuracy})
+                pbar.set_postfix({"accuracy":f"{stats.accuracy:0.3}","precision":stats.precision,"recall":stats.recall,"islands_accuracy":stats.islands_accuracy})
                 if output_video_opts is not None:
-                    fig.clear()
-                    ax=plt.subplot(111)
-                    nt.visualize_nodes(self.nodes,fig,is_plotly=False)
-                    nt.visualize_clusters(self.nodes,fig,is_plotly=False)
-                    nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False,show_false=output_video_opts.show_false_reports,show_missed=output_video_opts.show_missed_reports)
-                    time_min = self.current_time//60
-                    time_sec = self.current_time- time_min*60
-                    ax.set_title(f"time ={time_min}:{time_sec} , accuracy = {accuracy:0.3} , precision = {precision:0.3} , recall = {recall:0.3} \n islands_accuracy={islands_accuracy:0.3} , number of islands = {len(components_real)}")
-                    ax.set_ylim(0,self.distribution_params.area_size_y+2*self.distribution_params.margin_y)
-                    ax.set_xlim(0,self.distribution_params.area_size_x+2*self.distribution_params.margin_x)
-                    ax.legend()
-                    canvas = fig.canvas
-                    canvas.draw()
-                    image_array = np.array(canvas.renderer.buffer_rgba())
-                    image_array = image_array[:,:,0:3] # to rgb
-                    image_array = image_array[:,:,[2,1,0]]
-                    video_writer.write(image_array)
+                    self.output_netork_to_video(output_video_opts, fig, video_writer, stats,len(components_real))
 
         if output_video_opts is not None:
             video_writer.release()
-        return SimulationStatistics(accuracy=float(accuracy),precision=float(precision),recall=float(recall),islands_accuracy=float(islands_accuracy))
+        return stats
+
+    def calculate_statistics(self,len_of_components_real,len_of_components_reported):
+        self.real_plus_reported_edges+= np.sum((self.current_connectivity | self.reported_connectivity))
+        self.real_reported_edges+= np.sum(self.current_connectivity & self.reported_connectivity)
+        self.total_reported_edges+= np.sum(self.reported_connectivity)
+        self.total_real_edges+=np.sum(self.current_connectivity)
+        accuracy = self.real_reported_edges/self.real_plus_reported_edges
+        precision = self.real_reported_edges/self.total_reported_edges
+        recall = self.real_reported_edges / self.total_real_edges
+
+        self.islands_accuracy_nom += min(len_of_components_real,len_of_components_reported)
+        self.islands_accuracy_denom += max(len_of_components_real,len_of_components_reported)
+        islands_accuracy = self.islands_accuracy_nom/self.islands_accuracy_denom
+
+        stats = SimulationStatistics(accuracy=float(accuracy),precision=float(precision),recall=float(recall),islands_accuracy=float(islands_accuracy))
+        return stats
+
+    def calculate_network_component(self):
+        current_connectivity = self.current_connectivity & self.current_connectivity.T
+        components_real = connected_components(current_connectivity)
+
+        reported_connectivity = self.reported_connectivity & self.reported_connectivity.T
+        components_reported = connected_components(reported_connectivity)
+        return components_real,components_reported
+
+    def output_netork_to_video(self, output_video_opts, fig, video_writer, stats:SimulationStatistics,num_of_islands):
+        fig.clear()
+        ax=plt.subplot(111)
+        nt.visualize_nodes(self.nodes,fig,is_plotly=False)
+        nt.visualize_clusters(self.nodes,fig,is_plotly=False)
+        nt.visualize_cmatrix(self.nodes,self.current_connectivity,fig,reported_cmatrix=self.reported_connectivity,is_plotly=False,show_false=output_video_opts.show_false_reports,show_missed=output_video_opts.show_missed_reports)
+        time_min = self.current_time//60
+        time_sec = self.current_time- time_min*60
+        ax.set_title(f"time ={time_min}:{time_sec} , accuracy = {stats.accuracy:0.3} , precision = {stats.precision:0.3} , recall = {stats.recall:0.3} \n islands_accuracy={stats.islands_accuracy:0.3} , number of islands = {num_of_islands}")
+        ax.set_ylim(0,self.distribution_params.area_size_y+2*self.distribution_params.margin_y)
+        ax.set_xlim(0,self.distribution_params.area_size_x+2*self.distribution_params.margin_x)
+        ax.legend()
+        canvas = fig.canvas
+        canvas.draw()
+        image_array = np.array(canvas.renderer.buffer_rgba())
+        image_array = image_array[:,:,0:3] # to rgb
+        image_array = image_array[:,:,[2,1,0]]
+        video_writer.write(image_array)
 
     def update_current_measurements(self):
         self.current_rssi=rnet.create_recieve_power_matrix(self.nodes,self.propogation_model)
