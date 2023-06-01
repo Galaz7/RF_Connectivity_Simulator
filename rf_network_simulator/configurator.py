@@ -15,6 +15,8 @@ import git
 from os import path as osp
 import datetime
 
+from rf_network_simulator.velocity_models import VelocityModelType
+
 
 
 @params
@@ -78,7 +80,7 @@ def create_simulator_from_yaml(params_file_name="params.yaml") ->tuple[NetworkSi
     params._to_yaml(osp.join(experiment_folder,"params.yaml"))
 
     sim = create_simulator_from_params(params, experiment_folder)
-    
+
     return sim,experiment_folder
 
 def create_simulator_from_params(params, experiment_folder):
@@ -118,7 +120,7 @@ def create_simulator_from_params(params, experiment_folder):
 
     stability_opts = StablityOptions(params.stability.use_stability_conditions,params.stability.stability_period_sec,params.stability.stability_rate,params.stability.reported_is_stable)
 
-    sim = NetworkSimulator(simulation_rate=params.simulation_rate_secs,update_rate=update_rate,frequency=200,propogation_model=propogation_model,distribution_params=dist,steps_count=total_time,output_video_opts=output_video_opts,stability=stability_opts)
+    sim = NetworkSimulator(simulation_rate=params.simulation_rate_secs,update_rate=update_rate,frequency=200,propogation_model=propogation_model,distribution_params=dist,steps_count=total_time,output_video_opts=output_video_opts,stability=stability_opts,velocity_model=VelocityModelType.VMODEL_CLUSTER)
     return sim
 
 def create_experiments_folder(params):
@@ -137,7 +139,7 @@ def create_experiments_folder(params):
     current_datetime = datetime.datetime.now()
 
     # Format the date and time
-    formatted_datetime = current_datetime.strftime("%Y%m%d_%H%M")
+    formatted_datetime = current_datetime.strftime("%Y%m%d_%H%M%S")
 
     experiment_name = params.experiment_name.replace(" ","_")
 

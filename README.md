@@ -5,6 +5,8 @@ On every step , the simulator calculates the connectivity map, and reported conn
 
 The output of the simulator:
 - Accuracy
+- Precision/Recall
+- Islands connectivity
 - Connectivity video
 
 see [network simulator](notebooks/network_simulator.ipynb) for example
@@ -13,13 +15,14 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 
 ## TODOs:
 
+- [x] Add two types of nodes - each with different antenna height & velocity
+- [x] Distributions of 4 clusters. Each cluster have a common velocity vector up to noise
 - [x] Randomize 4 groups center of mass. In every group randomize according to some radius
 - [x] Similar velocity for every group
 - [x] Similar angle for all nodes
+- [x] Show center of mass
 - [x] Colorize types of nodes
 - [x] Analyze why the output is so connected with the nominal sensitivity
-- [x] Add two types of nodes - each with different antenna height & velocity
-- [x] Distributions of 4 clusters. Each cluster have a common velocity vector up to noise
 - [x] Organize experiments - folders, yaml configurations, yaml results, description
 - [x] Add randomness for the propogation model - x[dB]
 - [X] Add Egli model - use it as a model
@@ -27,12 +30,14 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [x] Fix the figure display axes ranges (to be centered)
 - [x] Starting distribution should be such that there is a single segment of connection
 
-- [x] Show center of mass
-- [x] Add measurements of number of islands / number of reported islands - accuracy of segmentation
+- [x] Add measurements o
 
+- [x] Increase number of executions
+- [ ] Motion model - do it circular
+- [ ] Update motion model - take into account terrain height map
 
-- [ ] Define an edge as an edge that is stable in the last 2 min (e.g connected>70% time)
-- [ ] The reporting algorithm will report on stable connections
+- [x] Define an edge as an edge that is stable in the last 2 min (e.g connected>70% time)
+- [x] The reporting algorithm will report on stable connections
 
 
 - [ ] Colorize differnt clusters
@@ -41,7 +46,6 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [ ] Seperate between simulation video rendering rate and simulation rate
 
 - [ ] Update radio propogation model - with terrain map
-- [ ] Update motion model - take into account terrain height map
 
 
 - [ ] How to know the right information for transmission

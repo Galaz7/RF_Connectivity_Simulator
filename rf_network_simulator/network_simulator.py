@@ -2,6 +2,8 @@ from typing import Optional, Tuple
 import numpy as np
 from dataclasses import dataclass
 from itertools import product
+
+from rf_network_simulator.velocity_models import VelocityModel, VelocityModelClusters, VelocityModelSimple, VelocityModelType
 from . import propogation_models as pmodels
 from .propogation_models import PropogationModel, PropogationModelFreeSpace
 from . import rf_network as rnet
@@ -67,7 +69,7 @@ class NetworkSimulator:
                  propogation_model:PropogationModel =PropogationModelFreeSpace() , 
                  loss_std=7,
                  steps_count = 100,output_video_opts:Optional[RenderingOptions]=None,
-                 stability:StablityOptions = StablityOptions()) :
+                 stability:StablityOptions = StablityOptions(),velocity_model:VelocityModelType = VelocityModelType.VMODEL_SIMPLE) :
         """Netork main simulator object, simulate the network connections over time and output statistics and video
 
         Args:
@@ -77,6 +79,7 @@ class NetworkSimulator:
             frequency (float, optional): The frequecy in MHz of the transmissions. Defaults to 200.0.
             stability_condition_sec (float): The condition to declare an endge to be stable
         """
+
         self.update_rate = update_rate
         self.simulation_rate = simulation_rate
         self.distribution_params = distribution_params
@@ -102,6 +105,10 @@ class NetworkSimulator:
         self.propogation_model = propogation_model
         self.loss_std = loss_std
         self.set_nodes_turn_on_period()
+        if velocity_model==VelocityModelType.VMODEL_SIMPLE:
+            self.velocity_model = VelocityModelSimple()
+        else:
+            self.velocity_model = VelocityModelClusters(self.nodes,1.0,self.distribution_params.area_size_x/2) #TODO: create dedicated params
     
     def set_nodes_turn_on_period(self):
         min_turn_on = 0
@@ -244,7 +251,7 @@ class NetworkSimulator:
 
     def step(self):
         self.current_time+=self.simulation_rate
-        rnet.update_nodes_location(self.nodes,self.simulation_rate)
+        self.velocity_model.update_nodes_locations(self.nodes,self.simulation_rate)
         self.update_current_measurements()
             
         self.update_reported_measurements()
