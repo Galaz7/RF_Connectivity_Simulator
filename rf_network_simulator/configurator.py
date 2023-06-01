@@ -5,7 +5,7 @@ import numpy as np
 
 import numpy as np
 
-from rf_network_simulator.network_simulator import NetworkSimulator,RenderingOptions
+from rf_network_simulator.network_simulator import NetworkSimulator,RenderingOptions, StablityOptions
 from rf_network_simulator.rf_network import NodesDistributionParams
 from rf_network_simulator import propogation_models as pmodels
 from rf_network_simulator import simple_height_map_generator as hmgen
@@ -32,6 +32,17 @@ class VisualizationParams:
     show_missed_reports: bool = False
 
 @params
+class StabilityParams:
+    use_stability_conditions:bool = False
+    """Use stability for declaring existance of edge"""
+    stability_period_sec:int = 120
+    """ The priod of time to measure an edge stability"""
+    stability_rate:float = 0.7
+    """ The rate of connectivity in the period of time to declare an edge to be stable"""
+    reported_is_stable: bool = False
+    """Use this to simulate aggregation of stability in the reports"""
+
+@params
 class Config:
     experiment_name:str=""
     seed:int = 0
@@ -51,6 +62,7 @@ class Config:
     """kph"""
     visualizations: VisualizationParams = VisualizationParams()
     create_video: bool = True
+    stability: StabilityParams = StabilityParams()
 
 
 
@@ -126,6 +138,8 @@ def create_simulator_from_yaml(params_file_name="params.yaml") ->tuple[NetworkSi
     else:
         output_video_opts=None
 
-    sim = NetworkSimulator(simulation_rate=params.simulation_rate_secs,update_rate=update_rate,frequency=200,propogation_model=propogation_model,distribution_params=dist,steps_count=total_time,output_video_opts=output_video_opts)
+    stability_opts = StablityOptions(params.stability.use_stability_conditions,params.stability.stability_period_sec,params.stability.stability_rate,params.stability.reported_is_stable)
+
+    sim = NetworkSimulator(simulation_rate=params.simulation_rate_secs,update_rate=update_rate,frequency=200,propogation_model=propogation_model,distribution_params=dist,steps_count=total_time,output_video_opts=output_video_opts,stability=stability_opts)
     return sim,experiment_folder
 

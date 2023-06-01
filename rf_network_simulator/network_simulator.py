@@ -11,6 +11,7 @@ from rf_network_simulator import visualization_tools as nt
 import cv2
 from eparams import params
 import networkx as nx
+import math
 
 @params
 class SimulationStatistics:
@@ -36,11 +37,28 @@ class StablityOptions:
     """ The priod of time to measure an edge stability"""
     stability_rate:float = 0.7
     """ The rate of connectivity in the period of time to declare an edge to be stable"""
+    reported_is_stable: bool = False
+    """Use this to simulate aggregation of stability in the reports"""
 
 def connected_components(edges):
     G = nx.from_numpy_matrix(edges)
     components = list(nx.connected_components(G))
     return components
+
+class StabilityTracker:
+    def __init__(self,steps_window:int,stability_thresh:int):
+        self.steps_window=steps_window
+        self.stability_thresh=stability_thresh
+        self.cmatrices=[]
+    
+    def report_measurement(self,cmatrix:np.ndarray):
+        self.cmatrices.append(cmatrix[...,None])
+        if len(self.cmatrices)>self.steps_window:
+            self.cmatrices.remove(self.cmatrices[0])
+    def get_stable_connectivity(self):
+        cmatrix = np.concatenate(self.cmatrices) #TODO: maybe we can skip the concatenate
+        cmatrix_count = np.sum(cmatrix,axis=-1)
+        return cmatrix_count>=self.stability_thresh
 
 class NetworkSimulator:
     def __init__(self,update_rate:float = 60*3,simulation_rate: float = 1,
@@ -73,6 +91,11 @@ class NetworkSimulator:
         self.current_snr= -1000*np.ones((l,l))
         self.current_connectivity= np.ones((l,l))==0
         self.stability = stability
+        
+        stability_steps = math.ceil(stability.stability_period_sec/self.simulation_rate)
+
+        self.stability_tracker = StabilityTracker(stability_steps,math.ceil(stability_steps*stability.stability_rate))
+
 
         self.current_time =0
         self.callbacks=[]
@@ -131,7 +154,7 @@ class NetworkSimulator:
         return stats
 
     def calculate_network_component(self):
-        current_connectivity = self.current_connectivity & self.current_connectivity.T
+        current_connectivity = self.current_stable_connectivity & self.current_stable_connectivity.T
         components_real = connected_components(current_connectivity)
 
         reported_connectivity = self.reported_connectivity & self.reported_connectivity.T
@@ -172,12 +195,21 @@ class NetworkSimulator:
         self.current_snr = self.current_rssi - noise_floor[None,:]
         self.current_connectivity = self.current_rssi >= sensitivities[None,:]
 
+        if self.stability.use_stability_conditions:
+            self.stability_tracker.report_measurement(self.current_connectivity)
+            self.current_stable_connectivity = self.stability_tracker.get_stable_connectivity()
+        else:
+            self.current_stable_connectivity = self.current_connectivity
+
     def update_reported_measurements(self):
         for idx,node in enumerate(self.nodes):
             if node.next_update<=self.current_time:
                 self.reported_rssi[idx,:]=self.current_rssi[idx,:] # Maybe add some error here
                 self.reported_snr[idx,:]=self.current_snr[idx,:]
-                self.reported_connectivity[idx,:]=self.current_connectivity[idx,:]
+                if self.stability.reported_is_stable:
+                    self.reported_connectivity[idx,:]=self.current_stable_connectivity[idx,:]
+                else:
+                    self.reported_connectivity[idx,:]=self.current_connectivity[idx,:]
                 node_step = np.random.poisson(self.update_rate)
                 node.next_update+=node_step
 
@@ -188,6 +220,7 @@ class NetworkSimulator:
         self.current_time+=self.simulation_rate
         rnet.update_nodes_location(self.nodes,self.simulation_rate)
         self.update_current_measurements()
+            
         self.update_reported_measurements()
         for callback in self.callbacks:
             callback(self)
