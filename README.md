@@ -29,24 +29,19 @@ see [network simulator](notebooks/network_simulator.ipynb) for example
 - [x] Add legend to the video
 - [x] Fix the figure display axes ranges (to be centered)
 - [x] Starting distribution should be such that there is a single segment of connection
-
 - [x] Add measurements o
 
 - [x] Increase number of executions
-- [ ] Motion model - do it circular
+- [x] Motion model - do it circular
 - [ ] Update motion model - take into account terrain height map
 
 - [x] Define an edge as an edge that is stable in the last 2 min (e.g connected>70% time)
 - [x] The reporting algorithm will report on stable connections
 
-
-- [ ] Colorize differnt clusters
+- [x] Colorize differnt clusters
 - [ ] Add probability for packet loss - single number
 - [ ] Fix longly rice model for less than 1 km --> egli
 - [ ] Seperate between simulation video rendering rate and simulation rate
-
-- [ ] Update radio propogation model - with terrain map
-
 
 - [ ] How to know the right information for transmission
 - [ ] Add node types in the legend
